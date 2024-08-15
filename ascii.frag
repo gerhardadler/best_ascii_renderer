@@ -1,7 +1,6 @@
 #version 300 es
 
-precision mediump float;
-precision mediump sampler2DArray;
+precision highp float;
 
 uniform sampler2D img1;
 uniform sampler2D img2;
@@ -55,11 +54,9 @@ vec4 getAtlasValue(int sampler, vec2 uv) {
 void main() {
   vec2 coords = vTexCoord;
   coords.y = 1. - coords.y;
-  vec2 texCoord = coords * resolution;
 
 
   vec2 symbolSize = vec2(8.0, 16.0);
-  vec2 chunkCoord = floor(texCoord / symbolSize) * symbolSize;
 
   float minCost = 10000.0;
   float chosenSymbolOffset = 0.0;
@@ -70,13 +67,13 @@ void main() {
       float scale = scales[scaleI];
       float scaleWeight = scaleWeights[scaleI];
       vec2 scaledSymbolSize = symbolSize / scale;
-      vec2 scaledChunkCoord = chunkCoord / scale;
-      vec2 scaledResolution = resolution / scale;
+      vec2 scaledResolution = resolution * scaledSymbolSize;
       
-      for (float x = 0.0; x < scaledSymbolSize.x; x++) {
-        for (float y = 0.0; y < scaledSymbolSize.y; y++) {
-          vec4 imgColor = getImgValue(int(scale), (scaledChunkCoord + vec2(x, y)) / scaledResolution) / 4.0;
-          vec4 symbolColor = getAtlasValue(int(scale), vec2(i * scaledSymbolSize.x + x, y) / vec2(scaledSymbolSize.x * float(numSymbols), scaledSymbolSize.y));
+      for (float x = 0.5; x < scaledSymbolSize.x; x++) {
+        for (float y = 0.5; y < scaledSymbolSize.y; y++) {
+          vec4 imgColor = getImgValue(int(scale), coords + (vec2(x, y) / scaledResolution)) / 1.0;
+          vec2 atlasOffset = vec2(i / float(numSymbols),0.0);
+          vec4 symbolColor = getAtlasValue(int(scale), atlasOffset + (vec2(x, y) / vec2(scaledSymbolSize.x*float(numSymbols), scaledSymbolSize.y)));
           cost += colorDistance(imgColor.rgb, symbolColor.rgb) / (scaledSymbolSize.x * scaledSymbolSize.y) * scaleWeight;
         }
       }
@@ -88,7 +85,13 @@ void main() {
     }
   }
 
-  vec2 symbolTexCoord = mod(texCoord, symbolSize);
-  vec2 atlasTexCoord = vec2((symbolTexCoord.x + chosenSymbolOffset * 8.0) / float(numSymbols), symbolTexCoord.y) / symbolSize;
-  fragColor = texture(atlas1, atlasTexCoord);
+  float value = chosenSymbolOffset / float(numSymbols);
+  // encode value to fragcolor
+  vec4 encodedColor;
+  encodedColor.r = fract(value);
+  encodedColor.g = fract(value * 256.0);
+  encodedColor.b = fract(value * 256.0 * 256.0);
+  encodedColor.a = fract(value * 256.0 * 256.0 * 256.0);
+  
+  fragColor = encodedColor;
 }
