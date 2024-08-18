@@ -180,20 +180,25 @@ function draw() {
   pg.rect(-symbolWidth / 2, -symbolHeight / 2, symbolWidth, symbolHeight);
   pg.resetShader();
 
-  renderPg.background(255, 255, 255, 0);
-  renderShaderProgram = renderShaderProgram.copyToContext(renderPg);
-  renderPg.shader(renderShaderProgram);
-  renderShaderProgram.setUniform("atlas", atlases[1]);
-  renderShaderProgram.setUniform("chosenSymbols", pg);
-  renderShaderProgram.setUniform("numSymbols", numSymbols);
-  renderShaderProgram.setUniform("resolution", [symbolWidth, symbolHeight]);
-  renderPg.rect(
-    imgs[1].width / 2,
-    -imgs[1].height / 2,
-    imgs[1].width,
-    imgs[1].height
-  );
-  renderPg.resetShader();
+  // renderPg.background(255, 255, 255, 0);
+  // renderShaderProgram = renderShaderProgram.copyToContext(renderPg);
+  // renderPg.shader(renderShaderProgram);
+  // renderShaderProgram.setUniform("atlas", atlases[1]);
+  // renderShaderProgram.setUniform("chosenSymbols", pg);
+  // renderShaderProgram.setUniform("numSymbols", numSymbols);
+  // renderShaderProgram.setUniform("resolution", [symbolWidth, symbolHeight]);
+  // renderPg.rect(
+  //   imgs[1].width / 2,
+  //   -imgs[1].height / 2,
+  //   imgs[1].width,
+  //   imgs[1].height
+  // );
+  // renderPg.resetShader();
+
+  image(renderPg, 0, 0);
+  tint(255, 255, 255, parseFloat(overlayOpacityField.value));
+  image(imgs[1], 0, 0);
+  noTint();
 
   pg.loadPixels();
 
@@ -209,7 +214,7 @@ function draw() {
 
       let chosenSymbol =
         r + g / 256.0 + b / (256.0 * 256.0) + a / (256.0 * 256.0 * 256.0);
-      let symbolIndex = Math.floor(chosenSymbol * 95);
+      let symbolIndex = Math.round(chosenSymbol * 95);
       console.log(symbolIndex);
 
       decodedMessage += chars.charAt(symbolIndex);
@@ -219,9 +224,4 @@ function draw() {
   outputText.innerText = decodedMessage;
   outputText.style.color = characterForegroundField.value;
   outputText.style.backgroundColor = characterBackgroundField.value;
-
-  image(renderPg, 0, 0);
-  tint(255, 255, 255, parseFloat(overlayOpacityField.value));
-  image(imgs[1], 0, 0);
-  noTint();
 }
