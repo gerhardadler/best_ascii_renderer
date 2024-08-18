@@ -14,6 +14,8 @@ uniform float[4] scales;
 uniform float[4] scaleWeights;
 uniform int numSymbols;
 uniform vec2 resolution;
+uniform float contrast;
+uniform float brightness;
 
 in vec2 vTexCoord;
 
@@ -71,7 +73,9 @@ void main() {
       
       for (float x = 0.5; x < scaledSymbolSize.x; x++) {
         for (float y = 0.5; y < scaledSymbolSize.y; y++) {
-          vec4 imgColor = getImgValue(int(scale), coords + (vec2(x, y) / scaledResolution)) / 1.0;
+          vec4 imgColor = getImgValue(int(scale), coords + (vec2(x, y) / scaledResolution));
+          imgColor.rgb = (imgColor.rgb - 0.5) * contrast + brightness;
+          imgColor.rgb = clamp(imgColor.rgb, 0.0, 1.0);
           vec2 atlasOffset = vec2(i / float(numSymbols),0.0);
           vec4 symbolColor = getAtlasValue(int(scale), atlasOffset + (vec2(x, y) / vec2(scaledSymbolSize.x*float(numSymbols), scaledSymbolSize.y)));
           cost += colorDistance(imgColor.rgb, symbolColor.rgb) / (scaledSymbolSize.x * scaledSymbolSize.y) * scaleWeight;
