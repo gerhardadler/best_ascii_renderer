@@ -25,6 +25,10 @@ let scaleWeight2 = document.getElementById("scale-weight-2");
 let scaleWeight4 = document.getElementById("scale-weight-4");
 let scaleWeight8 = document.getElementById("scale-weight-8");
 let drawButton = document.getElementById("draw-button");
+let outputText = document.getElementById("out");
+
+let chars =
+  " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"; // String containing all characters you want to use as symbols
 
 function hexToRgb(hex) {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -34,7 +38,7 @@ function hexToRgb(hex) {
 }
 
 function preload() {
-  img = loadImage("assets/nashville.jpg");
+  img = loadImage("assets/bmw.jpg");
   img.filter(GRAY);
   font = loadFont("assets/font.otf");
   asciiShaderProgram = loadShader("ascii.vert", "ascii.frag");
@@ -42,12 +46,15 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(1920, 1920);
+  createCanvas(0, 0);
   drawButton.addEventListener("click", draw);
   noLoop();
+}
 
-  let chars =
-    " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"; // String containing all characters you want to use as symbols
+// let asciiShaderProgram;
+// let renderShaderProgram;
+
+function createCharacterAtlases() {
   atlases = {
     1: createGraphics(numSymbols * 8, 16)
       .textFont(font)
@@ -77,13 +84,11 @@ function setup() {
       atlases[atlasScale].text(chars[i], x, 12 / atlasScale); // Center the text
     }
   }
+  return atlases;
 }
 
-// let asciiShaderProgram;
-// let renderShaderProgram;
-
 function createNewContext(symbolWidth, symbolHeight) {
-  console.log(symbolWidth, symbolHeight);
+  resizeCanvas(symbolWidth * 8, symbolHeight * 16);
   imgs = {
     1: createImage(symbolWidth * 8, symbolHeight * 16),
     2: createImage(symbolWidth * 4, symbolHeight * 8),
@@ -122,6 +127,8 @@ function createNewContext(symbolWidth, symbolHeight) {
 }
 
 let lastSymbolWidth;
+let lastCharacterBackground;
+let lastCharacterForeground;
 
 function draw() {
   background(255, 255, 255);
@@ -131,6 +138,15 @@ function draw() {
     createNewContext(symbolWidth, symbolHeight);
     console.log("Created new context");
     lastSymbolWidth = symbolWidth;
+  }
+
+  if (
+    characterBackgroundField.value !== lastCharacterBackground ||
+    characterForegroundField.value !== lastCharacterForeground
+  ) {
+    createCharacterAtlases();
+    lastCharacterBackground = characterBackgroundField.value;
+    lastCharacterForeground = characterForegroundField.value;
   }
 
   pg.reset();
@@ -179,9 +195,33 @@ function draw() {
   );
   renderPg.resetShader();
 
-  image(pg, 0, 0);
-  image(renderPg, 0, 100);
+  pg.loadPixels();
+
+  let decodedMessage = "";
+
+  for (let y = 0; y < pg.height; y++) {
+    for (let x = 0; x < pg.width; x++) {
+      let index = (x + y * pg.width) * 4;
+      let r = pg.pixels[index] / 256;
+      let g = pg.pixels[index + 1] / 256;
+      let b = pg.pixels[index + 2] / 256;
+      let a = pg.pixels[index + 3] / 256;
+
+      let chosenSymbol =
+        r + g / 256.0 + b / (256.0 * 256.0) + a / (256.0 * 256.0 * 256.0);
+      let symbolIndex = Math.floor(chosenSymbol * 95);
+      console.log(symbolIndex);
+
+      decodedMessage += chars.charAt(symbolIndex);
+    }
+    decodedMessage += "\n";
+  }
+  outputText.innerText = decodedMessage;
+  outputText.style.color = characterForegroundField.value;
+  outputText.style.backgroundColor = characterBackgroundField.value;
+
+  image(renderPg, 0, 0);
   tint(255, 255, 255, parseFloat(overlayOpacityField.value));
-  image(imgs[1], 0, 100);
+  image(imgs[1], 0, 0);
   noTint();
 }
