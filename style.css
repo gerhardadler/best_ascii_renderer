@@ -7,9 +7,10 @@
 
 
 #out {
-    font-size: 12px;
+    /* font-size: 12px;
     letter-spacing: 0.8px;;
     line-height: 16px;
-    font-family: 'monospace';
-    width: fit-content
+    font-family: 'monospace'; */
+    width: fit-content;
+    height: fit-content;
 }

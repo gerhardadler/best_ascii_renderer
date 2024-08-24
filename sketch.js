@@ -10,6 +10,7 @@ let renderShaderProgram;
 let symbols = [];
 let symbolTextures = [];
 let numSymbols = 95; // Number of symbols to use
+const fontSize = 12;
 let origImgWidth;
 let origImgHeight;
 
@@ -57,12 +58,8 @@ function setup() {
 // let renderShaderProgram;
 
 function createCharacterAtlases() {
-  const fontSize = 12;
-
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
-  svg.setAttribute("width", 10);
-  svg.setAttribute("height", 10);
   svg.setAttribute(
     "style",
     `background-color: ${characterBackgroundField.value};`
@@ -216,9 +213,16 @@ function draw() {
 
   pg.loadPixels();
 
-  let decodedMessage = "";
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute(
+    "style",
+    `background-color: ${characterBackgroundField.value};
+    white-space: pre;`
+  );
 
   for (let y = 0; y < pg.height; y++) {
+    let line = "";
     for (let x = 0; x < pg.width; x++) {
       let index = (x + y * pg.width) * 4;
       let r = pg.pixels[index] / 256;
@@ -229,13 +233,25 @@ function draw() {
       let chosenSymbol =
         r + g / 256.0 + b / (256.0 * 256.0) + a / (256.0 * 256.0 * 256.0);
       let symbolIndex = Math.round(chosenSymbol * 95);
-      console.log(symbolIndex);
-
-      decodedMessage += chars.charAt(symbolIndex);
+      line += chars.charAt(symbolIndex);
     }
-    decodedMessage += "\n";
+    let text = document.createElementNS(svgNS, "text");
+    text.setAttribute("x", 0);
+    text.setAttribute("y", y * charHeight + charHeight); // Align text with the top
+    text.setAttribute("fill", characterForegroundField.value);
+    text.setAttribute("font-family", "monospace");
+    text.setAttribute("font-size", fontSize);
+
+    text.textContent = line;
+    svg.appendChild(text);
   }
-  outputText.innerText = decodedMessage;
-  outputText.style.color = characterForegroundField.value;
-  outputText.style.backgroundColor = characterBackgroundField.value;
+
+  document.body.appendChild(svg);
+  const textBBox = svg.getBBox();
+  document.body.removeChild(svg);
+
+  svg.setAttribute("width", textBBox.width);
+  svg.setAttribute("height", textBBox.height);
+
+  document.getElementById("out").innerHTML = svg.outerHTML;
 }
