@@ -72,7 +72,7 @@ void main() {
       float yIncrement =  charSize.y / 8.0;
 
       for (float x = 0.5; x < scaledSymbolSize.x; x++) {
-        for (float y = 0.5; y < scaledSymbolSize.y; y+=yIncrement) {
+        for (float y = yIncrement/2.0; y < scaledSymbolSize.y; y+=yIncrement) {
           vec4 imgColor = getImgValue(int(scale), coords + (vec2(x, y) / scaledResolution));
           imgColor.rgb = (imgColor.rgb - 0.5) * contrast + brightness;
           imgColor.rgb = clamp(imgColor.rgb, 0.0, 1.0);
