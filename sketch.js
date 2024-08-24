@@ -2,6 +2,8 @@ let img;
 
 let imgs = {};
 let atlases = {};
+let origCharWidth;
+let origCharHeight;
 let charWidth;
 let charHeight;
 
@@ -86,14 +88,14 @@ function createCharacterAtlases() {
   let url = URL.createObjectURL(svgBlob);
 
   loadImage(url, (img) => {
-    charWidth = img.width / chars.length;
-    charHeight = img.height;
+    origCharWidth = img.width / chars.length;
+    origCharHeight = img.height;
 
     // This is done to get the different scales to make more sense. Char scale 8 should be about 1x2
-    const scaleRatio = 16 / charHeight;
+    const scaleRatio = 16 / origCharHeight;
 
-    charHeight *= scaleRatio;
-    charWidth *= scaleRatio;
+    charHeight = origCharHeight * scaleRatio;
+    charWidth = origCharWidth * scaleRatio;
     img.width *= scaleRatio;
     img.height *= scaleRatio;
 
@@ -120,12 +122,21 @@ function createCharacterAtlases() {
 }
 
 function createNewContext(symbolWidth, symbolHeight) {
-  resizeCanvas(symbolWidth * 8, symbolHeight * 16);
+  resizeCanvas(symbolWidth * charWidth, symbolHeight * charHeight);
   imgs = {
-    1: createImage(symbolWidth * 8, symbolHeight * 16),
-    2: createImage(symbolWidth * 4, symbolHeight * 8),
-    4: createImage(symbolWidth * 2, symbolHeight * 4),
-    8: createImage(symbolWidth * 1, symbolHeight * 2),
+    1: createImage(symbolWidth * charWidth, symbolHeight * charHeight),
+    2: createImage(
+      (symbolWidth * charWidth) / 2,
+      (symbolHeight * charHeight) / 2
+    ),
+    4: createImage(
+      (symbolWidth * charWidth) / 4,
+      (symbolHeight * charHeight) / 4
+    ),
+    8: createImage(
+      (symbolWidth * charWidth) / 8,
+      (symbolHeight * charHeight) / 8
+    ),
   };
   for (const sizedImg of Object.values(imgs)) {
     sizedImg.copy(
@@ -152,14 +163,6 @@ let lastCharacterForeground;
 
 function draw() {
   background(255, 255, 255);
-  let symbolWidth = parseInt(symbolWidthField.value);
-  let symbolHeight = Math.floor((img.height / img.width) * (symbolWidth / 2));
-  if (lastSymbolWidth !== symbolWidth) {
-    createNewContext(symbolWidth, symbolHeight);
-    console.log("Created new context");
-    lastSymbolWidth = symbolWidth;
-  }
-
   if (
     characterBackgroundField.value !== lastCharacterBackground ||
     characterForegroundField.value !== lastCharacterForeground
@@ -175,6 +178,16 @@ function draw() {
     return;
   }
   noLoop();
+
+  let symbolWidth = parseInt(symbolWidthField.value);
+  let symbolHeight = Math.floor(
+    (img.height / img.width) * (symbolWidth / (charHeight / charWidth))
+  );
+  if (lastSymbolWidth !== symbolWidth) {
+    createNewContext(symbolWidth, symbolHeight);
+    console.log("Created new context");
+    lastSymbolWidth = symbolWidth;
+  }
 
   pg.reset();
 
@@ -237,12 +250,12 @@ function draw() {
     }
     let text = document.createElementNS(svgNS, "text");
     text.setAttribute("x", 0);
-    text.setAttribute("y", y * charHeight + charHeight); // Align text with the top
+    text.setAttribute("y", y * origCharHeight + origCharHeight); // Align text with the top
     text.setAttribute("fill", characterForegroundField.value);
     text.setAttribute("font-family", "monospace");
     text.setAttribute("font-size", fontSize);
 
-    text.textContent = line;
+    text.textContent = line + "\n";
     svg.appendChild(text);
   }
 
