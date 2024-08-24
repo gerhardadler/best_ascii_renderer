@@ -13,6 +13,7 @@ uniform sampler2D atlas8;
 uniform float[4] scales;
 uniform float[4] scaleWeights;
 uniform int numSymbols;
+uniform vec2 charSize;
 uniform vec2 resolution;
 uniform float contrast;
 uniform float brightness;
@@ -57,9 +58,6 @@ void main() {
   vec2 coords = vTexCoord;
   coords.y = 1. - coords.y;
 
-
-  vec2 symbolSize = vec2(8.0, 16.0);
-
   float minCost = 10000.0;
   float chosenSymbolOffset = 0.0;
 
@@ -68,11 +66,13 @@ void main() {
     for (int scaleI = 0; scaleI < 4; scaleI++) {
       float scale = scales[scaleI];
       float scaleWeight = scaleWeights[scaleI];
-      vec2 scaledSymbolSize = symbolSize / scale;
+      vec2 scaledSymbolSize = charSize / scale;
       vec2 scaledResolution = resolution * scaledSymbolSize;
       
+      float yIncrement =  charSize.y / 8.0;
+
       for (float x = 0.5; x < scaledSymbolSize.x; x++) {
-        for (float y = 0.5; y < scaledSymbolSize.y; y++) {
+        for (float y = 0.5; y < scaledSymbolSize.y; y+=yIncrement) {
           vec4 imgColor = getImgValue(int(scale), coords + (vec2(x, y) / scaledResolution));
           imgColor.rgb = (imgColor.rgb - 0.5) * contrast + brightness;
           imgColor.rgb = clamp(imgColor.rgb, 0.0, 1.0);

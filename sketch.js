@@ -2,6 +2,8 @@ let img;
 
 let imgs = {};
 let atlases = {};
+let charWidth;
+let charHeight;
 
 let asciiShaderProgram;
 let renderShaderProgram;
@@ -38,7 +40,7 @@ function hexToRgb(hex) {
 }
 
 function preload() {
-  img = loadImage("assets/bmw.jpg");
+  img = loadImage("assets/dylan.png");
   img.filter(GRAY);
   font = loadFont("assets/font.otf");
   asciiShaderProgram = loadShader("ascii.vert", "ascii.frag");
@@ -55,36 +57,69 @@ function setup() {
 // let renderShaderProgram;
 
 function createCharacterAtlases() {
-  atlases = {
-    1: createGraphics(numSymbols * 8, 16)
-      .textFont(font)
-      .textSize(12)
-      .pixelDensity(1)
-      .background(hexToRgb(characterBackgroundField.value)),
-    2: createGraphics(numSymbols * 4, 8)
-      .textFont(font)
-      .textSize(6)
-      .pixelDensity(1)
-      .background(hexToRgb(characterBackgroundField.value)),
-    4: createGraphics(numSymbols * 2, 4)
-      .textFont(font)
-      .textSize(3)
-      .pixelDensity(1)
-      .background(hexToRgb(characterBackgroundField.value)),
-    8: createGraphics(numSymbols * 1, 2)
-      .textFont(font)
-      .textSize(1.5)
-      .pixelDensity(1)
-      .background(hexToRgb(characterBackgroundField.value)),
-  };
-  for (const atlasScale of [1, 2, 4, 8]) {
-    for (let i = 0; i < numSymbols; i++) {
-      let x = i * (8 / atlasScale);
-      atlases[atlasScale].fill(hexToRgb(characterForegroundField.value));
-      atlases[atlasScale].text(chars[i], x, 12 / atlasScale); // Center the text
+  const fontSize = 12;
+
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("width", 10);
+  svg.setAttribute("height", 10);
+  svg.setAttribute(
+    "style",
+    `background-color: ${characterBackgroundField.value};`
+  );
+
+  const text = document.createElementNS(svgNS, "text");
+  text.setAttribute("x", 0);
+  text.setAttribute("y", fontSize); // Align text with the top
+  text.setAttribute("fill", characterForegroundField.value);
+  text.setAttribute("font-family", "monospace");
+  text.setAttribute("font-size", fontSize);
+  text.innerHTML = chars.replaceAll(" ", "&nbsp;");
+  svg.appendChild(text);
+
+  document.body.appendChild(svg);
+  const textBBox = text.getBBox();
+  document.body.removeChild(svg);
+
+  svg.setAttribute("width", textBBox.width);
+  svg.setAttribute("height", textBBox.height);
+  let svgData = new XMLSerializer().serializeToString(svg);
+
+  let svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  let url = URL.createObjectURL(svgBlob);
+
+  loadImage(url, (img) => {
+    charWidth = img.width / chars.length;
+    charHeight = img.height;
+
+    // This is done to get the different scales to make more sense. Char scale 8 should be about 1x2
+    const scaleRatio = 16 / charHeight;
+
+    charHeight *= scaleRatio;
+    charWidth *= scaleRatio;
+    img.width *= scaleRatio;
+    img.height *= scaleRatio;
+
+    atlases = {
+      1: createImage(Math.floor(img.width), Math.floor(img.height)),
+      2: createImage(Math.floor(img.width / 2), Math.floor(img.height / 2)),
+      4: createImage(Math.floor(img.width / 4), Math.floor(img.height / 4)),
+      8: createImage(Math.floor(img.width / 8), Math.floor(img.height / 8)),
+    };
+    for (const atlas of Object.values(atlases)) {
+      atlas.copy(
+        img,
+        0,
+        0,
+        img.width,
+        img.height,
+        0,
+        0,
+        atlas.width,
+        atlas.height
+      );
     }
-  }
-  return atlases;
+  });
 }
 
 function createNewContext(symbolWidth, symbolHeight) {
@@ -108,22 +143,10 @@ function createNewContext(symbolWidth, symbolHeight) {
       sizedImg.height
     );
   }
-  // resizeCanvas(symbolWidth * 8, symbolHeight * 16 + 100);
   pg?.remove();
   pg = createGraphics(symbolWidth, symbolHeight, WEBGL);
-  // asciiShaderProgram = asciiShaderProgram.copyToContext(pg);
-  // pg.shader(asciiShaderProgram);
   renderPg?.remove();
   renderPg = createGraphics(imgs[1].width, imgs[1].height, WEBGL);
-  // renderShaderProgram = renderShaderProgram.copyToContext(renderPg);
-  // renderPg.shader(renderShaderProgram);
-
-  // pg.begin();
-  // shader(asciiShaderProgram);
-  // pg.end();
-  // renderPg.begin();
-  // shader(renderShaderProgram);
-  // renderPg.end();
 }
 
 let lastSymbolWidth;
@@ -145,12 +168,18 @@ function draw() {
     characterForegroundField.value !== lastCharacterForeground
   ) {
     createCharacterAtlases();
+    atlases = {};
     lastCharacterBackground = characterBackgroundField.value;
     lastCharacterForeground = characterForegroundField.value;
   }
 
+  if (atlases[1] === undefined) {
+    loop();
+    return;
+  }
+  noLoop();
+
   pg.reset();
-  renderPg.reset();
 
   pg.background(255, 255, 255, 0);
   asciiShaderProgram = asciiShaderProgram.copyToContext(pg);
@@ -171,6 +200,7 @@ function draw() {
     parseFloat(scaleWeight8.value),
   ]);
   asciiShaderProgram.setUniform("numSymbols", numSymbols);
+  asciiShaderProgram.setUniform("charSize", [charWidth, charHeight]);
   asciiShaderProgram.setUniform("resolution", [symbolWidth, symbolHeight]);
   asciiShaderProgram.setUniform("contrast", parseFloat(contrastField.value));
   asciiShaderProgram.setUniform(
@@ -180,22 +210,6 @@ function draw() {
   pg.rect(-symbolWidth / 2, -symbolHeight / 2, symbolWidth, symbolHeight);
   pg.resetShader();
 
-  // renderPg.background(255, 255, 255, 0);
-  // renderShaderProgram = renderShaderProgram.copyToContext(renderPg);
-  // renderPg.shader(renderShaderProgram);
-  // renderShaderProgram.setUniform("atlas", atlases[1]);
-  // renderShaderProgram.setUniform("chosenSymbols", pg);
-  // renderShaderProgram.setUniform("numSymbols", numSymbols);
-  // renderShaderProgram.setUniform("resolution", [symbolWidth, symbolHeight]);
-  // renderPg.rect(
-  //   imgs[1].width / 2,
-  //   -imgs[1].height / 2,
-  //   imgs[1].width,
-  //   imgs[1].height
-  // );
-  // renderPg.resetShader();
-
-  image(renderPg, 0, 0);
   tint(255, 255, 255, parseFloat(overlayOpacityField.value));
   image(imgs[1], 0, 0);
   noTint();

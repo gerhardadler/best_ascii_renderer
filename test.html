@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Letters A-Z</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: white;
+        }
+
+        #svgContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="svgContainer"></div>
+
+    <script>
+        const letters = 'abcdefghijklmnopqrstuvwxyz';
+        const fontSize = 16; // Font size in pixels
+        // Create the actual SVG
+        const svgNS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(svgNS, "svg");
+        svg.setAttribute("width", 10);
+        svg.setAttribute("height", 10);
+        svg.setAttribute("style", "background-color: black;");
+
+        const text = document.createElementNS(svgNS, "text");
+        text.setAttribute("x", 0);
+        text.setAttribute("y", fontSize); // Align text with the top
+        text.setAttribute("fill", "white");
+        text.setAttribute("font-family", "monospace");
+        text.setAttribute("font-size", fontSize);
+        text.textContent = letters;
+        svg.appendChild(text);
+
+        document.body.appendChild(svg)
+        const textBBox = text.getBBox();
+        document.body.removeChild(svg);
+
+        svg.setAttribute("width", textBBox.width);
+        svg.setAttribute("height", textBBox.height);
+
+        // Append SVG to the container
+        document.getElementById("svgContainer").appendChild(svg);
+    </script>
+</body>
+
+</html>
