@@ -8,49 +8,166 @@
     <style>
         body {
             margin: 0;
-            background-color: white;
-        }
-
-        #svgContainer {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
         }
     </style>
 </head>
 
 <body>
-    <div id="svgContainer"></div>
-
+    <svg id="curves" width="600" height="600" xmlns="http://www.w3.org/2000/svg" style="background: grey;">
+        <!-- <circle cx="0" cy="600" r="10" style="fill:black;cursor:move;" />
+        <circle cx="100" cy="500" r="10" style="fill:black;cursor:move;" />
+        <circle cx="200" cy="400" r="10" style="fill:black;cursor:move;" />
+        <circle cx="300" cy="300" r="10" style="fill:black;cursor:move;" />
+        <circle cx="400" cy="200" r="10" style="fill:black;cursor:move;" />
+        <circle cx="500" cy="100" r="10" style="fill:black;cursor:move;" />
+        <circle cx="600" cy="0" r="10" style="fill:black;cursor:move;" /> -->
+    </svg>
     <script>
-        const letters = 'abcdefghijklmnopqrstuvwxyz';
-        const fontSize = 16; // Font size in pixels
-        // Create the actual SVG
-        const svgNS = "http://www.w3.org/2000/svg";
-        const svg = document.createElementNS(svgNS, "svg");
-        svg.setAttribute("width", 10);
-        svg.setAttribute("height", 10);
-        svg.setAttribute("style", "background-color: black;");
+        class Curves {
+            constructor(svg, initialPoints, pathStyle = 'fill:none;stroke:black;stroke-width:3', circleStyle = 'fill:black;', circleRadius = 10) {
+                this.svg = svg;
+                this.pathStyle = pathStyle;
+                this.circleStyle = circleStyle;
+                this.circleRadius = circleRadius;
 
-        const text = document.createElementNS(svgNS, "text");
-        text.setAttribute("x", 0);
-        text.setAttribute("y", fontSize); // Align text with the top
-        text.setAttribute("fill", "white");
-        text.setAttribute("font-family", "monospace");
-        text.setAttribute("font-size", fontSize);
-        text.textContent = letters;
-        svg.appendChild(text);
+                this.boundOnMouseDown = this.onMouseDown.bind(this);
+                this.boundOnMouseMove = this.onMouseMove.bind(this);
 
-        document.body.appendChild(svg)
-        const textBBox = text.getBBox();
-        document.body.removeChild(svg);
+                this.svg.addEventListener('mousedown', this.boundOnMouseDown);
+                this.svg.addEventListener('mousemove', this.boundOnMouseMove);
+                this.svgRect = svg.getBoundingClientRect();
 
-        svg.setAttribute("width", textBBox.width);
-        svg.setAttribute("height", textBBox.height);
+                this.points = initialPoints;
+                this.closestPoint = [0, 0];
+                this.closestPointIndex = 0;
+                this.selectedPoint = null;
+                this.selectedPointIndex = null;
 
-        // Append SVG to the container
-        document.getElementById("svgContainer").appendChild(svg);
+                this.drawPath();
+                this.drawCircles();
+            }
+
+            addPoint(x, y) {
+                this.points.push([x, y]);
+                this.points.sort(([xa, _], [xb, __]) => xa > xb);
+
+            }
+
+            drawCircles() {
+                this.svg.querySelectorAll('circle').forEach(circle => circle.remove());
+                this.points.forEach(([x, y]) => {
+                    const actualX = x * this.svgRect.width;
+                    const actualY = y * this.svgRect.height;
+                    const newCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    newCircle.setAttribute('cx', actualX);
+                    newCircle.setAttribute('cy', actualY);
+                    newCircle.setAttribute('r', this.circleRadius);
+                    newCircle.setAttribute('style', this.circleStyle);
+                    this.svg.appendChild(newCircle)
+                });
+            }
+            drawPath() {
+                let path = this.svg.querySelector('path');
+                if (!path) {
+                    path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('style', this.pathStyle);
+                    svg.prepend(path);
+                }
+                let d = `M ${0} ${this.points[0][1] * this.svgRect.width} `
+                this.points[0][1]
+                this.points.forEach(([x, y], i) => {
+                    const actualX = x * this.svgRect.width;
+                    const actualY = y * this.svgRect.height;
+                    d += `L ${parseFloat(actualX)} ${parseFloat(actualY)} `;
+                });
+                d += `L ${this.svgRect.width} ${this.points[this.points.length - 1][1] * this.svgRect.height}`;
+                path.setAttribute('d', d);
+            }
+
+            onMouseMove(e) {
+                let actualX = e.clientX - this.svgRect.left;
+                let actualY = e.clientY - this.svgRect.top;
+
+                let x = actualX / this.svgRect.width;
+                let y = actualY / this.svgRect.height;
+
+                let closestDistance = Infinity;
+
+                this.points.forEach(([px, py], i) => {
+                    // Calculate the distance from the target point
+                    const distance = Math.sqrt(Math.pow(px - x, 2) + Math.pow(py - y, 2));
+
+                    // Check if this point is closer than the previous closest
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        this.closestPoint = [px, py];
+                        this.closestPointIndex = i;
+                    }
+                });
+
+                if (Math.abs(this.closestPoint[0] - x) < 0.03 && Math.abs(this.closestPoint[1] - y) < 0.03) {
+                    this.svg.style.cursor = 'move';
+                    this.selectedPoint = this.closestPoint;
+                    this.selectedPointIndex = this.closestPointIndex;
+                } else {
+                    this.svg.style.cursor = 'crosshair';
+                    this.selectedPoint = null;
+                    this.selectedPointIndex = null;
+                }
+            }
+            onMouseDown(e) {
+                if (this.selectedPoint !== null) {
+                    if (e.shiftKey) {
+                        this.points.splice(this.selectedPointIndex, 1);
+                        this.drawPath();
+                        this.drawCircles();
+                        return;
+                    }
+                    const prevX = this.points[this.selectedPointIndex - 1]?.[0] ?? 0;
+                    const nextX = this.points[this.selectedPointIndex + 1]?.[0] ?? this.svgRect.width;
+                    const onMouseMove = (e) => {
+                        let actualX = e.clientX - this.svgRect.left;
+                        let actualY = e.clientY - this.svgRect.top;
+
+                        let x = actualX / this.svgRect.width;
+                        let y = actualY / this.svgRect.height;
+
+                        x = Math.max(prevX, Math.min(nextX, x));
+                        y = Math.max(0, Math.min(this.svgRect.height / this.svgRect.height, y));
+
+                        this.points[this.selectedPointIndex] = [x, y];
+                        this.drawPath();
+                        this.drawCircles();
+                    };
+                    const onMouseUp = () => {
+                        window.removeEventListener('mousemove', onMouseMove);
+                        this.svg.addEventListener('mousemove', this.boundOnMouseMove);
+                        this.svg.removeEventListener('mouseup', onMouseUp);
+                    };
+                    this.svg.removeEventListener('mousemove', this.boundOnMouseMove);
+                    window.addEventListener('mousemove', onMouseMove);
+                    this.svg.addEventListener('mouseup', onMouseUp);
+                } else {
+                    let actualX = e.clientX - this.svgRect.left;
+                    let actualY = e.clientY - this.svgRect.top;
+
+                    let x = actualX / this.svgRect.width;
+                    let y = actualY / this.svgRect.height;
+
+                    this.addPoint(x, y);
+                    this.drawPath();
+                    this.drawCircles();
+                }
+            }
+        }
+        const svg = document.getElementById('curves');
+        const curves = new Curves(svg, [
+            [0, 1],
+            [0.25, 0.75],
+            [0.5, 0.5],
+            [0.75, 0.25],
+            [1, 0]
+        ]);
     </script>
 </body>
 
