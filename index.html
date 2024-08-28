@@ -1,41 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>p5.js Project</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css" />
     <!-- Include p5.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script>
-</head>
+  </head>
 
-<body>
+  <body>
     <label>Width in symbols</label>
-    <input type="number" id="symbol-width" value="64"><br>
+    <input type="number" id="symbol-width" value="64" /><br />
     <label>Character Foreground</label>
-    <input type="color" id="character-foreground" value="#FFFFFF"><br>
+    <input type="color" id="character-foreground" value="#FFFFFF" /><br />
     <label>Character Background</label>
-    <input type="color" id="character-background" value="#000000"><br>
+    <input type="color" id="character-background" value="#000000" /><br />
     <label>Overlay opacity</label>
-    <input type="number" id="overlay-opacity" value="0"><br>
-    <label>Contrast</label>
+    <input type="number" id="overlay-opacity" value="0" /><br />
+    <label>Brightness curves</label>
+    <svg
+      id="curves"
+      width="600"
+      height="600"
+      xmlns="http://www.w3.org/2000/svg"
+      style="background: grey"
+    ></svg>
+    <!-- <label>Contrast</label>
     <input type="number" id="contrast" value="1"><br>
     <label>Brightness</label>
-    <input type="number" id="brightness" value="0"><br>
+    <input type="number" id="brightness" value="0"><br> -->
     <label>Scale Weight 1</label>
-    <input type="number" id="scale-weight-1" value="1.0"><br>
+    <input type="number" id="scale-weight-1" value="1.0" /><br />
     <label>Scale Weight 2</label>
-    <input type="number" id="scale-weight-2" value="1.0"><br>
+    <input type="number" id="scale-weight-2" value="1.0" /><br />
     <label>Scale Weight 4</label>
-    <input type="number" id="scale-weight-4" value="1.0"><br>
+    <input type="number" id="scale-weight-4" value="1.0" /><br />
     <label>Scale Weight 8</label>
-    <input type="number" id="scale-weight-8" value="1.0"><br>
+    <input type="number" id="scale-weight-8" value="1.0" /><br />
     <button id="draw-button">Draw</button>
 
-    <br><br>
+    <br /><br />
     <div id="out"></div>
+    <script src="src/curves.js"></script>
     <script src="sketch.js"></script>
-</body>
-
+  </body>
 </html>

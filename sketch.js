@@ -1,3 +1,5 @@
+// import { Curves } from "./src/curves.js";
+
 let img;
 
 let imgs = {};
@@ -23,8 +25,14 @@ let symbolWidthField = document.getElementById("symbol-width");
 let characterForegroundField = document.getElementById("character-foreground");
 let characterBackgroundField = document.getElementById("character-background");
 let overlayOpacityField = document.getElementById("overlay-opacity");
-let contrastField = document.getElementById("contrast");
-let brightnessField = document.getElementById("brightness");
+// let contrastField = document.getElementById("contrast");
+// let brightnessField = document.getElementById("brightness");
+let curveSvg = document.getElementById("curves");
+let curves = new Curves(curveSvg, [
+  [0, 0],
+  [1, 1],
+]);
+
 let scaleWeight1 = document.getElementById("scale-weight-1");
 let scaleWeight2 = document.getElementById("scale-weight-2");
 let scaleWeight4 = document.getElementById("scale-weight-4");
@@ -212,11 +220,13 @@ function draw() {
   asciiShaderProgram.setUniform("numSymbols", numSymbols);
   asciiShaderProgram.setUniform("charSize", [charWidth, charHeight]);
   asciiShaderProgram.setUniform("resolution", [symbolWidth, symbolHeight]);
-  asciiShaderProgram.setUniform("contrast", parseFloat(contrastField.value));
-  asciiShaderProgram.setUniform(
-    "brightness",
-    parseFloat(brightnessField.value)
-  );
+  // asciiShaderProgram.setUniform("contrast", parseFloat(contrastField.value));
+  // asciiShaderProgram.setUniform(
+  //   "brightness",
+  //   parseFloat(brightnessField.value)
+  // );
+  console.log(curves.getPoints());
+  asciiShaderProgram.setUniform("curve", curves.getPoints().flat());
   pg.rect(-symbolWidth / 2, -symbolHeight / 2, symbolWidth, symbolHeight);
   pg.resetShader();
 
