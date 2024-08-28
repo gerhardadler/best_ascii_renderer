@@ -11,12 +11,8 @@ let charHeight;
 
 let asciiShaderProgram;
 let renderShaderProgram;
-let symbols = [];
-let symbolTextures = [];
 let numSymbols = 95; // Number of symbols to use
 const fontSize = 12;
-let origImgWidth;
-let origImgHeight;
 
 let pg;
 let renderPg;
@@ -25,8 +21,6 @@ let symbolWidthField = document.getElementById("symbol-width");
 let characterForegroundField = document.getElementById("character-foreground");
 let characterBackgroundField = document.getElementById("character-background");
 let overlayOpacityField = document.getElementById("overlay-opacity");
-// let contrastField = document.getElementById("contrast");
-// let brightnessField = document.getElementById("brightness");
 let curveSvg = document.getElementById("curves");
 let curves = new Curves(curveSvg, [
   [0, 0],
@@ -63,9 +57,6 @@ function setup() {
   drawButton.addEventListener("click", draw);
   noLoop();
 }
-
-// let asciiShaderProgram;
-// let renderShaderProgram;
 
 function createCharacterAtlases() {
   const svgNS = "http://www.w3.org/2000/svg";
@@ -220,11 +211,6 @@ function draw() {
   asciiShaderProgram.setUniform("numSymbols", numSymbols);
   asciiShaderProgram.setUniform("charSize", [charWidth, charHeight]);
   asciiShaderProgram.setUniform("resolution", [symbolWidth, symbolHeight]);
-  // asciiShaderProgram.setUniform("contrast", parseFloat(contrastField.value));
-  // asciiShaderProgram.setUniform(
-  //   "brightness",
-  //   parseFloat(brightnessField.value)
-  // );
   console.log(curves.getPoints());
   asciiShaderProgram.setUniform("curve", curves.getPoints().flat());
   pg.rect(-symbolWidth / 2, -symbolHeight / 2, symbolWidth, symbolHeight);
