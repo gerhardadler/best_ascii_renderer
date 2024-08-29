@@ -89,7 +89,9 @@ class Curves {
             ),
           ]
         : [];
-    return listPrefix.concat(this.points, listSuffix);
+    return listPrefix
+      .concat(this.points, listSuffix)
+      .map((point) => [point.x, point.y]);
   }
 
   drawCircles() {

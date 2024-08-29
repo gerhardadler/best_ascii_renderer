@@ -1,5 +1,3 @@
-// import { Curves } from "./src/curves.js";
-
 let img;
 
 let imgs = {};
