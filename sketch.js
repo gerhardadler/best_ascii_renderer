@@ -19,8 +19,8 @@ let symbolWidthField = document.getElementById("symbol-width");
 let characterForegroundField = document.getElementById("character-foreground");
 let characterBackgroundField = document.getElementById("character-background");
 let overlayOpacityField = document.getElementById("overlay-opacity");
-let curveSvg = document.getElementById("curve");
-let curve = new Curve(curveSvg, [
+let brightnessCurveSvg = document.getElementById("brightness-curve");
+let brightnessCurve = new Curve(brightnessCurveSvg, [
   [0, 0],
   [1, 1],
 ]);
@@ -64,17 +64,17 @@ function createCharacterAtlases() {
     `background-color: ${characterBackgroundField.value};`
   );
 
-  const text = document.createElementNS(svgNS, "text");
-  text.setAttribute("x", 0);
-  text.setAttribute("y", fontSize); // Align text with the top
-  text.setAttribute("fill", characterForegroundField.value);
-  text.setAttribute("font-family", "monospace");
-  text.setAttribute("font-size", fontSize);
-  text.innerHTML = chars.replaceAll(" ", "&nbsp;");
-  svg.appendChild(text);
+  const svgText = document.createElementNS(svgNS, "text");
+  svgText.setAttribute("x", 0);
+  svgText.setAttribute("y", fontSize); // Align text with the top
+  svgText.setAttribute("fill", characterForegroundField.value);
+  svgText.setAttribute("font-family", "monospace");
+  svgText.setAttribute("font-size", fontSize);
+  svgText.innerHTML = chars.replaceAll(" ", "&nbsp;");
+  svg.appendChild(svgText);
 
   document.body.appendChild(svg);
-  const textBBox = text.getBBox();
+  const textBBox = svgText.getBBox();
   document.body.removeChild(svg);
 
   svg.setAttribute("width", textBBox.width);
@@ -209,8 +209,8 @@ function draw() {
   asciiShaderProgram.setUniform("numSymbols", numSymbols);
   asciiShaderProgram.setUniform("charSize", [charWidth, charHeight]);
   asciiShaderProgram.setUniform("resolution", [symbolWidth, symbolHeight]);
-  console.log(curve.getPoints());
-  asciiShaderProgram.setUniform("curve", curve.getPoints().flat());
+  console.log(brightnessCurve.getPoints());
+  asciiShaderProgram.setUniform("curve", brightnessCurve.getPoints().flat());
   pg.rect(-symbolWidth / 2, -symbolHeight / 2, symbolWidth, symbolHeight);
   pg.resetShader();
 
@@ -229,7 +229,7 @@ function draw() {
   );
 
   for (let y = 0; y < pg.height; y++) {
-    let line = "";
+    let textLine = "";
     for (let x = 0; x < pg.width; x++) {
       let index = (x + y * pg.width) * 4;
       let r = pg.pixels[index] / 256;
@@ -240,17 +240,17 @@ function draw() {
       let chosenSymbol =
         r + g / 256.0 + b / (256.0 * 256.0) + a / (256.0 * 256.0 * 256.0);
       let symbolIndex = Math.round(chosenSymbol * 95);
-      line += chars.charAt(symbolIndex);
+      textLine += chars.charAt(symbolIndex);
     }
-    let text = document.createElementNS(svgNS, "text");
-    text.setAttribute("x", 0);
-    text.setAttribute("y", y * origCharHeight + origCharHeight); // Align text with the top
-    text.setAttribute("fill", characterForegroundField.value);
-    text.setAttribute("font-family", "monospace");
-    text.setAttribute("font-size", fontSize);
+    let svgText = document.createElementNS(svgNS, "text");
+    svgText.setAttribute("x", 0);
+    svgText.setAttribute("y", y * origCharHeight + origCharHeight); // Align text with the top
+    svgText.setAttribute("fill", characterForegroundField.value);
+    svgText.setAttribute("font-family", "monospace");
+    svgText.setAttribute("font-size", fontSize);
 
-    text.textContent = line + "\n";
-    svg.appendChild(text);
+    svgText.textContent = textLine + "\n";
+    svg.appendChild(svgText);
   }
 
   document.body.appendChild(svg);
