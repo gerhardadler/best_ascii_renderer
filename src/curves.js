@@ -21,7 +21,7 @@ class Point {
   }
 }
 
-class Curves {
+class Curve {
   constructor(
     svg,
     initialPoints,

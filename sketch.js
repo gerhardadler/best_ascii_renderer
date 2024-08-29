@@ -19,8 +19,8 @@ let symbolWidthField = document.getElementById("symbol-width");
 let characterForegroundField = document.getElementById("character-foreground");
 let characterBackgroundField = document.getElementById("character-background");
 let overlayOpacityField = document.getElementById("overlay-opacity");
-let curveSvg = document.getElementById("curves");
-let curves = new Curves(curveSvg, [
+let curveSvg = document.getElementById("curve");
+let curve = new Curve(curveSvg, [
   [0, 0],
   [1, 1],
 ]);
@@ -209,8 +209,8 @@ function draw() {
   asciiShaderProgram.setUniform("numSymbols", numSymbols);
   asciiShaderProgram.setUniform("charSize", [charWidth, charHeight]);
   asciiShaderProgram.setUniform("resolution", [symbolWidth, symbolHeight]);
-  console.log(curves.getPoints());
-  asciiShaderProgram.setUniform("curve", curves.getPoints().flat());
+  console.log(curve.getPoints());
+  asciiShaderProgram.setUniform("curve", curve.getPoints().flat());
   pg.rect(-symbolWidth / 2, -symbolHeight / 2, symbolWidth, symbolHeight);
   pg.resetShader();
 
