@@ -35,6 +35,16 @@ let outputText = document.getElementById("out");
 let chars =
   " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"; // String containing all characters you want to use as symbols
 
+let base64Font;
+
+function loadCustomFont(files) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    base64Font = e.target.result;
+  };
+  reader.readAsDataURL(files[0]);
+}
+
 function hexToRgb(hex) {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -45,7 +55,6 @@ function hexToRgb(hex) {
 function preload() {
   img = loadImage("assets/dylan.png");
   img.filter(GRAY);
-  font = loadFont("assets/font.otf");
   asciiShaderProgram = loadShader("ascii.vert", "ascii.frag");
   renderShaderProgram = loadShader("render.vert", "render.frag");
 }
@@ -59,16 +68,22 @@ function setup() {
 function createCharacterAtlases() {
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
+  const svgStyle = document.createElementNS(svgNS, "style");
+  svgStyle.textContent = `@font-face {
+    font-family: render-font;
+    src: url('${base64Font}');
+  }`;
+  svg.appendChild(svgStyle);
   svg.setAttribute(
     "style",
-    `background-color: ${characterBackgroundField.value};`
+    `background-color: ${characterBackgroundField.value};
+    font-family: ${base64Font !== undefined ? "render-font" : "monospace"};`
   );
 
   const svgText = document.createElementNS(svgNS, "text");
   svgText.setAttribute("x", 0);
   svgText.setAttribute("y", fontSize); // Align text with the top
   svgText.setAttribute("fill", characterForegroundField.value);
-  svgText.setAttribute("font-family", "monospace");
   svgText.setAttribute("font-size", fontSize);
   svgText.innerHTML = chars.replaceAll(" ", "&nbsp;");
   svg.appendChild(svgText);
@@ -157,17 +172,20 @@ function createNewContext(symbolWidth, symbolHeight) {
 let lastSymbolWidth;
 let lastCharacterBackground;
 let lastCharacterForeground;
+let lastBase64Font;
 
 function draw() {
   background(255, 255, 255);
   if (
     characterBackgroundField.value !== lastCharacterBackground ||
-    characterForegroundField.value !== lastCharacterForeground
+    characterForegroundField.value !== lastCharacterForeground ||
+    base64Font !== lastBase64Font
   ) {
     createCharacterAtlases();
     atlases = {};
     lastCharacterBackground = characterBackgroundField.value;
     lastCharacterForeground = characterForegroundField.value;
+    lastBase64Font = base64Font;
   }
 
   if (atlases[1] === undefined) {
@@ -222,10 +240,17 @@ function draw() {
 
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
+  const svgStyle = document.createElementNS(svgNS, "style");
+  svgStyle.textContent = `@font-face {
+    font-family: render-font;
+    src: url('${base64Font}');
+  }`;
+  svg.appendChild(svgStyle);
   svg.setAttribute(
     "style",
     `background-color: ${characterBackgroundField.value};
-    white-space: pre;`
+    white-space: pre;
+    font-family: ${base64Font !== undefined ? "render-font" : "monospace"};`
   );
 
   for (let y = 0; y < pg.height; y++) {
@@ -246,7 +271,6 @@ function draw() {
     svgText.setAttribute("x", 0);
     svgText.setAttribute("y", y * origCharHeight + origCharHeight); // Align text with the top
     svgText.setAttribute("fill", characterForegroundField.value);
-    svgText.setAttribute("font-family", "monospace");
     svgText.setAttribute("font-size", fontSize);
 
     svgText.textContent = textLine + "\n";

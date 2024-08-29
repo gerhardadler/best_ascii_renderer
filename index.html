@@ -4,12 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>p5.js Project</title>
-    <link rel="stylesheet" href="style.css" />
+    <!-- <link rel="stylesheet" href="style.css" /> -->
     <!-- Include p5.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script>
   </head>
 
   <body>
+    <label>Font</label>
+    <input type="file" onchange="loadCustomFont(this.files)" /><br />
     <label>Width in symbols</label>
     <input type="number" id="symbol-width" value="64" /><br />
     <label>Character Foreground</label>
