@@ -77,7 +77,8 @@ function createCharacterAtlases() {
   svg.setAttribute(
     "style",
     `background-color: ${characterBackgroundField.value};
-    font-family: ${base64Font !== undefined ? "render-font" : "monospace"};`
+    font-family: ${base64Font !== undefined ? "render-font" : "monospace"};
+    font-variant-ligatures: none;`
   );
 
   const svgText = document.createElementNS(svgNS, "text");
@@ -250,7 +251,8 @@ function draw() {
     "style",
     `background-color: ${characterBackgroundField.value};
     white-space: pre;
-    font-family: ${base64Font !== undefined ? "render-font" : "monospace"};`
+    font-family: ${base64Font !== undefined ? "render-font" : "monospace"};
+    font-variant-ligatures: none;`
   );
 
   for (let y = 0; y < pg.height; y++) {
