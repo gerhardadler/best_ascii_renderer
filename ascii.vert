@@ -1,14 +1,8 @@
 #version 300 es
-precision highp float;
-
-in vec3 aPosition;
-in vec2 aTexCoord;
-
+in vec4 aVertexPosition;
 out vec2 vTexCoord;
 
-void main() {
-    vec4 positionVec4 = vec4(aPosition, 1.0f);
-    positionVec4.xy = positionVec4.xy * 2.0f - 1.0f;
-    vTexCoord = aTexCoord;
-    gl_Position = positionVec4;
+void main(void) {
+    gl_Position = aVertexPosition;
+    vTexCoord = aVertexPosition.xy * 0.5f + 0.5f;
 }

@@ -6,10 +6,13 @@
     <title>p5.js Project</title>
     <!-- <link rel="stylesheet" href="style.css" /> -->
     <!-- Include p5.js library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvg/3.0.7/umd.min.js"></script>
   </head>
 
   <body>
+    <label>Image</label>
+    <input type="file" id="image" /><br />
     <label>Font</label>
     <input type="file" onchange="loadCustomFont(this.files)" /><br />
     <label>Width in symbols</label>
@@ -45,7 +48,8 @@
 
     <br /><br />
     <div id="out"></div>
+    <canvas id="glCanvas"></canvas>
     <script src="src/curves.js"></script>
-    <script src="sketch.js"></script>
+    <script src="new_sketch.js"></script>
   </body>
 </html>
