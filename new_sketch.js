@@ -292,10 +292,15 @@ async function draw() {
     [characterAtlas, charWidth, charHeight] = createCharacterAtlas();
     characterAtlasImage = await svgToImage(characterAtlas);
     setupRequired = true;
+    prevWidthInChars = widthInCharsField.value;
+    prevBackground = characterBackgroundField.value;
+    prevForeground = characterForegroundField.value;
+    prevBase64Font = base64Font;
   }
 
   if (prevImg !== img) {
     setupRequired = true;
+    prevImg = img;
   }
 
   if (setupRequired) {
