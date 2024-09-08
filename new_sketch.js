@@ -338,7 +338,7 @@ async function draw() {
   gl.uniform1i(atlasSamplerUniformLocation, 1);
 
   // Pass the float arrays to the shader
-  gl.uniform1fv(scalesLocation, [1, 2, 3, 4]);
+  gl.uniform1fv(scalesLocation, [0, 1, 2, 3]);
   gl.uniform1fv(scaleWeightsLocation, [
     parseFloat(scaleWeight1.value),
     parseFloat(scaleWeight2.value),
