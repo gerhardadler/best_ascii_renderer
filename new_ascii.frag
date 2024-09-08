@@ -36,7 +36,6 @@ float colorDistance(vec3 color1, vec3 color2) {
 
 void main() {
   vec2 coords = vTexCoord;
-  // coords.y = 1. - coords.y;
 
   float minCost = 10000.0;
   float chosenSymbolOffset = 0.0;
@@ -47,26 +46,9 @@ void main() {
       float scale = scales[scaleI];
       float scaleWeight = scaleWeights[scaleI];
 
-      float xStep = 1.0 / (charSize.x / pow(2.0, scale));
-      float yStep = 1.0 / (charSize.y / pow(2.0, scale));
+      float xStep = 1.0 / (charSize.x / pow(2.0, scale)) / 2.0;
+      float yStep = 1.0 / (charSize.y / pow(2.0, scale)) / 2.0;
 
-
-      // vec2 scaledSymbolSize = charSize / scale;
-      // vec2 scaledResolution = resolution * scaledSymbolSize;
-      
-      // float yIncrement =  charSize.y / 8.0;
-
-      // for (float x = 0.5; x < scaledSymbolSize.x; x++) {
-      //   for (float y = yIncrement/2.0; y < scaledSymbolSize.y; y+=yIncrement) {
-      //     vec4 imgColor = textureLod(img, coords + (vec2(x, y) / scaledResolution), scale);
-      //     // imgColor.rgb = (imgColor.rgb - 0.5) * contrast + brightness;
-      //     imgColor.rgb = vec3(interpolate(imgColor.r), interpolate(imgColor.g), interpolate(imgColor.b));
-      //     imgColor.rgb = clamp(imgColor.rgb, 0.0, 1.0);
-      //     vec2 atlasOffset = vec2(i / float(numSymbols),0.0);
-      //     vec4 symbolColor = textureLod(atlas, atlasOffset + (vec2(x, y) / vec2(scaledSymbolSize.x*float(numSymbols), scaledSymbolSize.y)), scale);
-      //     cost += colorDistance(imgColor.rgb, symbolColor.rgb) / (scaledSymbolSize.x * scaledSymbolSize.y) * scaleWeight;
-      //   }
-      // }
       vec2 atlasOffset = vec2(i / float(numSymbols),0.0);
       for (float x = xStep/2.0; x < 1.0; x += xStep) {
         for (float y = yStep/2.0; y < 1.0; y += yStep) {
@@ -76,7 +58,7 @@ void main() {
           imgColor.rgb = clamp(imgColor.rgb, 0.0, 1.0);
           
           vec4 symbolColor = textureLod(atlas, atlasOffset + vec2(x, y) / vec2(numSymbols, 1.0), scale);
-          cost += colorDistance(imgColor.rgb, symbolColor.rgb) / (100.0 * 100.0) * scaleWeight;
+          cost += colorDistance(imgColor.rgb, symbolColor.rgb) * (xStep * yStep) * scaleWeight;
         }
       }
     }

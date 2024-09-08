@@ -22,7 +22,7 @@ let overlayOpacityField = document.getElementById("overlay-opacity");
 let brightnessCurveSvg = document.getElementById("brightness-curve");
 let brightnessCurve = new Curve(brightnessCurveSvg, [
   [0, 0],
-  [1, 1],
+  [1, 0.3],
 ]);
 
 let scaleWeight1 = document.getElementById("scale-weight-1");
