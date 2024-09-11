@@ -35,7 +35,8 @@ float colorDistance(vec3 color1, vec3 color2) {
 }
 
 void main() {
-  vec2 coords = vTexCoord;
+  // the subtraction is to start of the texture
+  vec2 coords = vTexCoord - (0.5 / resolution);
 
   float minCost = 10000.0;
   float chosenSymbolOffset = 0.0;
