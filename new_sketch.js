@@ -306,9 +306,9 @@ async function draw() {
   if (setupRequired) {
     console.log("Setting up WebGL");
     widthInChars = widthInCharsField.value;
-    heightInChars =
-      Math.round((img.height / img.width) * widthInChars) *
-      (charWidth / charHeight);
+    heightInChars = Math.round(
+      (img.height / img.width) * widthInChars * (charWidth / charHeight)
+    );
 
     canvas.width = widthInChars;
     canvas.height = heightInChars;
@@ -377,20 +377,4 @@ async function draw() {
   document.getElementById("out").innerHTML = svg.outerHTML;
 }
 
-async function setup() {
-  // const img = await loadImageFromURL("assets/dylan.png");
-  // let characterAtlas;
-  // [characterAtlas, charWidth, charHeight] = createCharacterAtlas();
-  // const characterAtlasImage = await svgToImage(characterAtlas);
-  // widthInChars = widthInCharsField.value;
-  // heightInChars =
-  //   Math.round((img.height / img.width) * widthInChars) *
-  //   (charWidth / charHeight);
-  // canvas.width = widthInChars;
-  // canvas.height = heightInChars;
-  // const [gl, shaderProgram] = await setupWebGL(canvas);
-  // draw(gl, shaderProgram, img, characterAtlasImage);
-}
-
-window.addEventListener("load", setup, false);
 drawButton.addEventListener("click", draw, false);
