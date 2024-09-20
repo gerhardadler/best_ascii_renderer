@@ -58,7 +58,7 @@ void main() {
           imgColor.rgb = vec3(interpolate(imgColor.r), interpolate(imgColor.g), interpolate(imgColor.b));
           imgColor.rgb = clamp(imgColor.rgb, 0.0, 1.0);
           
-          vec4 symbolColor = textureLod(atlas, atlasOffset + vec2(x, y) / vec2(numSymbols, 1.0), scale);
+          vec4 symbolColor = textureLod(atlas, atlasOffset + vec2(x, y) / vec2(numSymbols*2, 1.0), scale);
           cost += colorDistance(imgColor.rgb, symbolColor.rgb) * (xStep * yStep) * scaleWeight;
         }
       }

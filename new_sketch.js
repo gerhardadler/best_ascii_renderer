@@ -3,8 +3,6 @@ let charHeight;
 let widthInChars;
 let heightInChars;
 
-let asciiShaderProgram;
-let renderShaderProgram;
 let numSymbols = 95; // Number of symbols to use
 const fontSize = 12;
 
@@ -19,6 +17,7 @@ let widthInCharsField = document.getElementById("symbol-width");
 let characterForegroundField = document.getElementById("character-foreground");
 let characterBackgroundField = document.getElementById("character-background");
 let overlayOpacityField = document.getElementById("overlay-opacity");
+let charsField = document.getElementById("chars");
 let brightnessCurveSvg = document.getElementById("brightness-curve");
 let brightnessCurve = new Curve(brightnessCurveSvg, [
   [0, 0],
@@ -31,9 +30,6 @@ let scaleWeight4 = document.getElementById("scale-weight-4");
 let scaleWeight8 = document.getElementById("scale-weight-8");
 let drawButton = document.getElementById("draw-button");
 let outputText = document.getElementById("out");
-
-let chars =
-  " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"; // String containing all characters you want to use as symbols
 
 let base64Font;
 
@@ -94,6 +90,33 @@ function loadImageFromURL(url) {
   });
 }
 
+function measureCharacterWidth(char, fontFamily, fontSize) {
+  let svgNS = "http://www.w3.org/2000/svg";
+  let tempSvg = document.createElementNS(svgNS, "svg");
+  const svgStyle = document.createElementNS(svgNS, "style");
+  svgStyle.textContent = `@font-face {
+    font-family: render-font;
+    src: url('${base64Font}');
+  }`;
+  tempSvg.appendChild(svgStyle);
+  tempSvg.setAttribute(
+    "style",
+    `background-color: ${characterBackgroundField.value};
+    white-space: pre;
+    font-family: ${base64Font !== undefined ? "render-font" : "monospace"};
+    font-variant-ligatures: none;`
+  );
+  let tempText = document.createElementNS(svgNS, "text");
+  tempText.setAttribute("font-family", fontFamily);
+  tempText.setAttribute("font-size", fontSize);
+  tempText.textContent = char;
+  tempSvg.appendChild(tempText);
+  document.body.appendChild(tempSvg);
+  let bbox = tempText.getBBox();
+  document.body.removeChild(tempSvg);
+  return bbox.width;
+}
+
 function createCharacterAtlas() {
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
@@ -101,34 +124,64 @@ function createCharacterAtlas() {
   svgStyle.textContent = `@font-face {
     font-family: render-font;
     src: url('${base64Font}');
-  }`;
+    }`;
   svg.appendChild(svgStyle);
+
+  let fontFamily = base64Font !== undefined ? "render-font" : "monospace";
+
   svg.setAttribute(
     "style",
     `background-color: ${characterBackgroundField.value};
-    font-family: ${base64Font !== undefined ? "render-font" : "monospace"};
+    font-family: ${fontFamily};
     font-variant-ligatures: none;`
   );
 
-  const svgText = document.createElementNS(svgNS, "text");
-  svgText.setAttribute("x", 0);
-  svgText.setAttribute("y", fontSize); // Align text with the top
-  svgText.setAttribute("fill", characterForegroundField.value);
-  svgText.setAttribute("font-size", fontSize);
-  svgText.innerHTML = chars.replaceAll(" ", "&nbsp;");
-  svg.appendChild(svgText);
+  // Characters to render
+  // let fontSize = 16; // in pixels
 
-  document.body.appendChild(svg);
-  const textBBox = svgText.getBBox();
-  document.body.removeChild(svg);
+  // Measure character width
+  let initialCharWidth = measureCharacterWidth("M", fontFamily, fontSize);
+  let adjustedCharWidth = Math.round(initialCharWidth);
+  console.log(adjustedCharWidth);
+  let charWidthScale = adjustedCharWidth / initialCharWidth;
+  let adjustedFontSize = Math.floor(fontSize * charWidthScale);
 
-  svg.setAttribute("width", textBBox.width);
-  svg.setAttribute("height", textBBox.height);
-  return [
-    new XMLSerializer().serializeToString(svg),
-    textBBox.width / chars.length,
-    textBBox.height,
-  ];
+  for (let i = 0; i < charsField.value.length; i++) {
+    let textElem = document.createElementNS(svgNS, "text");
+    textElem.setAttribute("x", i * 2 * adjustedCharWidth);
+    textElem.setAttribute("y", adjustedFontSize); // Adjust 'y' as needed
+    // textElem.setAttribute("font-family", fontFamily);
+    textElem.setAttribute("fill", characterForegroundField.value);
+
+    textElem.setAttribute("font-size", `${adjustedFontSize}px`);
+    textElem.setAttribute("kerning", "0");
+    textElem.setAttribute("letter-spacing", "0");
+    textElem.textContent = charsField.value[i];
+    svg.appendChild(textElem);
+  }
+
+  // Set overall SVG dimensions
+  console.log(adjustedCharWidth);
+  svg.setAttribute("width", adjustedCharWidth * charsField.value.length * 2);
+  svg.setAttribute("height", adjustedFontSize * 1.2); // Adjust as needed for line height
+
+  return new XMLSerializer().serializeToString(svg);
+
+  // const svgText = document.createElementNS(svgNS, "text");
+  // svgText.setAttribute("x", 0);
+  // svgText.setAttribute("y", fontSize); // Align text with the top
+  // svgText.setAttribute("fill", characterForegroundField.value);
+  // svgText.setAttribute("font-size", fontSize);
+  // svgText.innerHTML = charsField.value.replaceAll(" ", "&nbsp;");
+  // svg.appendChild(svgText);
+
+  // document.body.appendChild(svg);
+  // const textBBox = svgText.getBBox();
+  // document.body.removeChild(svg);
+
+  // svg.setAttribute("width", textBBox.width);
+  // svg.setAttribute("height", textBBox.height);
+  // return new XMLSerializer().serializeToString(svg);
 }
 
 async function loadShaderFile(url) {
@@ -248,14 +301,15 @@ function getOutputSVG(pixelData) {
 
       let chosenSymbol =
         r + g / 256.0 + b / (256.0 * 256.0) + a / (256.0 * 256.0 * 256.0);
-      let symbolIndex = Math.round(chosenSymbol * 95);
-      textLine += chars.charAt(symbolIndex);
+      let symbolIndex = Math.round(chosenSymbol * charsField.value.length);
+      textLine += charsField.value.charAt(symbolIndex);
     }
     let svgText = document.createElementNS(svgNS, "text");
     svgText.setAttribute("x", 0);
     svgText.setAttribute("y", y * charHeight + charHeight); // Align text with the top
     svgText.setAttribute("fill", characterForegroundField.value);
     svgText.setAttribute("font-size", fontSize);
+    svgText.setAttribute("xml:space", "preserve"); // Preserve whitespace
 
     svgText.textContent = textLine + "\n";
     svg.appendChild(svgText);
@@ -273,6 +327,7 @@ function getOutputSVG(pixelData) {
 
 let prevImg;
 let prevWidthInChars;
+let prevChars;
 let prevBackground;
 let prevForeground;
 let prevBase64Font;
@@ -284,15 +339,20 @@ async function draw() {
   let setupRequired = false;
   if (
     prevWidthInChars !== widthInCharsField.value ||
+    prevChars !== charsField.value ||
     prevBackground !== characterBackgroundField.value ||
     prevForeground !== characterForegroundField.value ||
     prevBase64Font !== base64Font
   ) {
-    let characterAtlas;
-    [characterAtlas, charWidth, charHeight] = createCharacterAtlas();
+    let characterAtlas = createCharacterAtlas();
     characterAtlasImage = await svgToImage(characterAtlas);
+    console.log(characterAtlasImage.width);
+    console.log(characterAtlasImage.width / charsField.value.length / 2);
+    charHeight = characterAtlasImage.height;
+    charWidth = characterAtlasImage.width / charsField.value.length / 2;
     setupRequired = true;
     prevWidthInChars = widthInCharsField.value;
+    prevChars = charsField.value;
     prevBackground = characterBackgroundField.value;
     prevForeground = characterForegroundField.value;
     prevBase64Font = base64Font;
@@ -351,7 +411,11 @@ async function draw() {
     parseFloat(scaleWeight8.value),
   ]);
 
-  gl.uniform1i(numSymbolsLocation, numSymbols);
+  console.log(charsField.value.length);
+  console.log(charsField.value);
+  gl.uniform1i(numSymbolsLocation, charsField.value.length);
+
+  console.log(charWidth, charHeight);
 
   gl.uniform2fv(charSizeLocation, [charWidth, charHeight]);
   gl.uniform2fv(resolutionLocation, [widthInChars, heightInChars]);
