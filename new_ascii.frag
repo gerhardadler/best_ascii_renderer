@@ -77,6 +77,8 @@ void main() {
   encodedColor.g = fract(value * 256.0);
   encodedColor.b = fract(value * 256.0 * 256.0);
   encodedColor.a = fract(value * 256.0 * 256.0 * 256.0);
+
+  // encodedColor = textureLod(atlas, coords, 3.0);
   
   fragColor = encodedColor;
 }

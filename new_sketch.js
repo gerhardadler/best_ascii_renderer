@@ -136,9 +136,6 @@ function createCharacterAtlas() {
     font-variant-ligatures: none;`
   );
 
-  // Characters to render
-  // let fontSize = 16; // in pixels
-
   // Measure character width
   let initialCharWidth = measureCharacterWidth("M", fontFamily, fontSize);
   let adjustedCharWidth = Math.round(initialCharWidth);
@@ -148,7 +145,7 @@ function createCharacterAtlas() {
 
   for (let i = 0; i < charsField.value.length; i++) {
     let textElem = document.createElementNS(svgNS, "text");
-    textElem.setAttribute("x", i * 2 * adjustedCharWidth);
+    textElem.setAttribute("x", i * 4 * adjustedCharWidth);
     textElem.setAttribute("y", adjustedFontSize); // Adjust 'y' as needed
     // textElem.setAttribute("font-family", fontFamily);
     textElem.setAttribute("fill", characterForegroundField.value);
@@ -162,7 +159,7 @@ function createCharacterAtlas() {
 
   // Set overall SVG dimensions
   console.log(adjustedCharWidth);
-  svg.setAttribute("width", adjustedCharWidth * charsField.value.length * 2);
+  svg.setAttribute("width", adjustedCharWidth * charsField.value.length * 4);
   svg.setAttribute("height", adjustedFontSize * 1.2); // Adjust as needed for line height
 
   return new XMLSerializer().serializeToString(svg);
@@ -237,14 +234,18 @@ function loadTexture(gl, image) {
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
   // Generate mipmaps with 4 levels
-  gl.generateMipmap(gl.TEXTURE_2D);
   gl.texParameteri(
     gl.TEXTURE_2D,
     gl.TEXTURE_MIN_FILTER,
     gl.LINEAR_MIPMAP_LINEAR
   );
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_BASE_LEVEL, 0);
+  const ext = gl.getExtension("EXT_texture_filter_anisotropic");
+  if (ext) {
+    console.log("yes ext");
+    gl.texParameterf(gl.TEXTURE_2D, ext.TEXTURE_MAX_ANISOTROPY_EXT, 16);
+  }
+  gl.generateMipmap(gl.TEXTURE_2D);
   return texture;
 }
 
@@ -347,9 +348,9 @@ async function draw() {
     let characterAtlas = createCharacterAtlas();
     characterAtlasImage = await svgToImage(characterAtlas);
     console.log(characterAtlasImage.width);
-    console.log(characterAtlasImage.width / charsField.value.length / 2);
+    console.log(characterAtlasImage.width / charsField.value.length / 4);
     charHeight = characterAtlasImage.height;
-    charWidth = characterAtlasImage.width / charsField.value.length / 2;
+    charWidth = characterAtlasImage.width / charsField.value.length / 4;
     setupRequired = true;
     prevWidthInChars = widthInCharsField.value;
     prevChars = charsField.value;
@@ -369,6 +370,8 @@ async function draw() {
     heightInChars = Math.round(
       (img.height / img.width) * widthInChars * (charWidth / charHeight)
     );
+    // widthInChars = charWidth * numSymbols;
+    // heightInChars = charHeight;
 
     canvas.width = widthInChars;
     canvas.height = heightInChars;
