@@ -3,7 +3,6 @@ let charHeight;
 let widthInChars;
 let heightInChars;
 
-let numSymbols = 95; // Number of symbols to use
 const fontSize = 12;
 
 let img;
@@ -145,7 +144,7 @@ function createCharacterAtlas() {
 
   for (let i = 0; i < charsField.value.length; i++) {
     let textElem = document.createElementNS(svgNS, "text");
-    textElem.setAttribute("x", i * 4 * adjustedCharWidth);
+    textElem.setAttribute("x", i * 3 * adjustedCharWidth);
     textElem.setAttribute("y", adjustedFontSize); // Adjust 'y' as needed
     // textElem.setAttribute("font-family", fontFamily);
     textElem.setAttribute("fill", characterForegroundField.value);
@@ -159,7 +158,7 @@ function createCharacterAtlas() {
 
   // Set overall SVG dimensions
   console.log(adjustedCharWidth);
-  svg.setAttribute("width", adjustedCharWidth * charsField.value.length * 4);
+  svg.setAttribute("width", adjustedCharWidth * charsField.value.length * 3);
   svg.setAttribute("height", adjustedFontSize * 1.2); // Adjust as needed for line height
 
   return new XMLSerializer().serializeToString(svg);
@@ -233,19 +232,36 @@ function loadTexture(gl, image) {
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
-  // Generate mipmaps with 4 levels
-  gl.texParameteri(
-    gl.TEXTURE_2D,
-    gl.TEXTURE_MIN_FILTER,
-    gl.LINEAR_MIPMAP_LINEAR
-  );
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  const ext = gl.getExtension("EXT_texture_filter_anisotropic");
-  if (ext) {
-    console.log("yes ext");
-    gl.texParameterf(gl.TEXTURE_2D, ext.TEXTURE_MAX_ANISOTROPY_EXT, 16);
+  // Manually generate mipmaps
+  let width = image.width;
+  let height = image.height;
+  let level = 1;
+
+  // Loop until the texture is 1x1
+  while (width > 1 || height > 1) {
+    width = Math.max(1, width >> 1); // Divide width by 2
+    height = Math.max(1, height >> 1); // Divide height by 2
+
+    // Create a smaller canvas to render the mipmap level
+    const mipmapCanvas = document.createElement("canvas");
+    mipmapCanvas.width = width;
+    mipmapCanvas.height = height;
+
+    const ctx = mipmapCanvas.getContext("2d");
+    ctx.drawImage(image, 0, 0, width, height);
+
+    // Upload the mipmap level
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      level,
+      gl.RGBA,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      mipmapCanvas
+    );
+
+    level++;
   }
-  gl.generateMipmap(gl.TEXTURE_2D);
   return texture;
 }
 
@@ -348,9 +364,9 @@ async function draw() {
     let characterAtlas = createCharacterAtlas();
     characterAtlasImage = await svgToImage(characterAtlas);
     console.log(characterAtlasImage.width);
-    console.log(characterAtlasImage.width / charsField.value.length / 4);
+    console.log(characterAtlasImage.width / charsField.value.length / 3);
     charHeight = characterAtlasImage.height;
-    charWidth = characterAtlasImage.width / charsField.value.length / 4;
+    charWidth = characterAtlasImage.width / charsField.value.length / 3;
     setupRequired = true;
     prevWidthInChars = widthInCharsField.value;
     prevChars = charsField.value;
@@ -370,7 +386,7 @@ async function draw() {
     heightInChars = Math.round(
       (img.height / img.width) * widthInChars * (charWidth / charHeight)
     );
-    // widthInChars = charWidth * numSymbols;
+    // widthInChars = charWidth * charsField.value.length * 3;
     // heightInChars = charHeight;
 
     canvas.width = widthInChars;
@@ -439,6 +455,26 @@ async function draw() {
     gl.UNSIGNED_BYTE, // type of data to read
     pixelData // typed array to store pixel data
   );
+
+  // i want to get the average brightness of each letter of the image
+  // the image consist of all the letters after each other with 3 spaces between each letter
+  // the letters have the height: charHeight and the width: charWidth
+  // the image is stored in pixelData with the format: RGBA
+  const writePre = document.getElementById("write");
+  for (x = 0; x < widthInChars / charWidth; x++) {
+    let sum = 0;
+    for (i = 0; i < charWidth; i++) {
+      for (j = 0; j < charHeight; j++) {
+        const index = (x * charWidth + i + j * widthInChars) * 3;
+        sum += pixelData[index] + pixelData[index + 1] + pixelData[index + 2];
+      }
+    }
+    writePre.textContent +=
+      charsField.value[x / 3] +
+      ": " +
+      sum / (charWidth * charHeight * 3) +
+      "\n";
+  }
 
   const svg = getOutputSVG(pixelData, widthInChars, heightInChars, charHeight);
   document.getElementById("out").innerHTML = svg.outerHTML;
