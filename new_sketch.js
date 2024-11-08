@@ -4,6 +4,7 @@ let widthInChars;
 let heightInChars;
 
 const fontSize = 12;
+let adjustedFontSize;
 
 let img;
 let gl;
@@ -15,7 +16,7 @@ let imageField = document.getElementById("image");
 let widthInCharsField = document.getElementById("symbol-width");
 let characterForegroundField = document.getElementById("character-foreground");
 let characterBackgroundField = document.getElementById("character-background");
-let overlayOpacityField = document.getElementById("overlay-opacity");
+let lineHeightField = document.getElementById("line-height");
 let charsField = document.getElementById("chars");
 let brightnessCurveSvg = document.getElementById("brightness-curve");
 let brightnessCurve = new Curve(brightnessCurveSvg, [
@@ -113,7 +114,7 @@ function measureCharacterWidth(char, fontFamily, fontSize) {
   document.body.appendChild(tempSvg);
   let bbox = tempText.getBBox();
   document.body.removeChild(tempSvg);
-  return bbox.width;
+  return [bbox.width, bbox.height];
 }
 
 function createCharacterAtlas() {
@@ -134,17 +135,20 @@ function createCharacterAtlas() {
     font-family: ${fontFamily};
     font-variant-ligatures: none;`
   );
-
   // Measure character width
-  let initialCharWidth = measureCharacterWidth("M", fontFamily, fontSize);
-  let adjustedCharWidth = Math.round(initialCharWidth);
-  console.log(adjustedCharWidth);
-  let charWidthScale = adjustedCharWidth / initialCharWidth;
-  let adjustedFontSize = Math.floor(fontSize * charWidthScale);
+  let [initialCharWidth, initialCharHeight] = measureCharacterWidth(
+    "M",
+    fontFamily,
+    fontSize
+  );
+  let fontWidth = 8;
+  let charWidthScale = fontWidth / initialCharWidth;
+  let adjustedCharHeight = initialCharHeight * charWidthScale;
+  adjustedFontSize = fontSize * charWidthScale;
 
   for (let i = 0; i < charsField.value.length; i++) {
     let textElem = document.createElementNS(svgNS, "text");
-    textElem.setAttribute("x", i * 3 * adjustedCharWidth);
+    textElem.setAttribute("x", i * 3 * fontWidth);
     textElem.setAttribute("y", adjustedFontSize); // Adjust 'y' as needed
     // textElem.setAttribute("font-family", fontFamily);
     textElem.setAttribute("fill", characterForegroundField.value);
@@ -157,9 +161,11 @@ function createCharacterAtlas() {
   }
 
   // Set overall SVG dimensions
-  console.log(adjustedCharWidth);
-  svg.setAttribute("width", adjustedCharWidth * charsField.value.length * 3);
-  svg.setAttribute("height", adjustedFontSize * 1.2); // Adjust as needed for line height
+  console.log(fontWidth);
+  svg.setAttribute("width", fontWidth * charsField.value.length * 3);
+  svg.setAttribute("height", adjustedCharHeight * lineHeightField.value); // Adjust as needed for line height
+
+  document.body.appendChild(svg);
 
   return new XMLSerializer().serializeToString(svg);
 
@@ -325,7 +331,7 @@ function getOutputSVG(pixelData) {
     svgText.setAttribute("x", 0);
     svgText.setAttribute("y", y * charHeight + charHeight); // Align text with the top
     svgText.setAttribute("fill", characterForegroundField.value);
-    svgText.setAttribute("font-size", fontSize);
+    svgText.setAttribute("font-size", adjustedFontSize);
     svgText.setAttribute("xml:space", "preserve"); // Preserve whitespace
 
     svgText.textContent = textLine + "\n";
@@ -347,6 +353,7 @@ let prevWidthInChars;
 let prevChars;
 let prevBackground;
 let prevForeground;
+let prevLineHeight;
 let prevBase64Font;
 
 async function draw() {
@@ -359,6 +366,7 @@ async function draw() {
     prevChars !== charsField.value ||
     prevBackground !== characterBackgroundField.value ||
     prevForeground !== characterForegroundField.value ||
+    prevLineHeight !== lineHeightField.value ||
     prevBase64Font !== base64Font
   ) {
     let characterAtlas = createCharacterAtlas();
@@ -372,6 +380,7 @@ async function draw() {
     prevChars = charsField.value;
     prevBackground = characterBackgroundField.value;
     prevForeground = characterForegroundField.value;
+    prevLineHeight = lineHeightField.value;
     prevBase64Font = base64Font;
   }
 

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>p5.js Project</title>
-    <!-- <link rel="stylesheet" href="style.css" /> -->
+    <link rel="stylesheet" href="style.css" />
     <!-- Include p5.js library -->
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/canvg/3.0.7/umd.min.js"></script>
@@ -25,8 +25,8 @@
     <input type="color" id="character-foreground" value="#FFFFFF" /><br />
     <label>Character Background</label>
     <input type="color" id="character-background" value="#000000" /><br />
-    <label>Overlay opacity</label>
-    <input type="number" id="overlay-opacity" value="0" /><br />
+    <label>Line height</label>
+    <input type="number" id="line-height" value="1.2" /><br />
     <label>Brightness curve</label><br />
     <svg
       id="brightness-curve"
@@ -52,6 +52,7 @@
 
     <br /><br />
     <div id="out"></div>
+    <pre id="write"></pre>
     <canvas id="glCanvas"></canvas>
     <script src="src/curves.js"></script>
     <script src="new_sketch.js"></script>
