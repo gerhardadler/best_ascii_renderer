@@ -30,8 +30,7 @@ let scaleWeight4 = document.getElementById("scale-weight-4");
 let scaleWeight8 = document.getElementById("scale-weight-8");
 let drawButton = document.getElementById("draw-button");
 let outputText = document.getElementById("out");
-
-let base64Font;
+let fontNameField = document.getElementById("font-name");
 
 imageField.addEventListener("change", function (event) {
   // Get the file from the input (first file in case of multiple)
@@ -56,14 +55,6 @@ imageField.addEventListener("change", function (event) {
     reader.readAsDataURL(file);
   }
 });
-
-function loadCustomFont(files) {
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    base64Font = e.target.result;
-  };
-  reader.readAsDataURL(files[0]);
-}
 
 // Convert SVG string to an Image object
 function svgToImage(svgString) {
@@ -90,24 +81,17 @@ function loadImageFromURL(url) {
   });
 }
 
-function measureCharacterWidth(char, fontFamily, fontSize) {
+function measureCharacterWidth(char, fontSize) {
   let svgNS = "http://www.w3.org/2000/svg";
   let tempSvg = document.createElementNS(svgNS, "svg");
-  const svgStyle = document.createElementNS(svgNS, "style");
-  svgStyle.textContent = `@font-face {
-    font-family: render-font;
-    src: url('${base64Font}');
-  }`;
-  tempSvg.appendChild(svgStyle);
   tempSvg.setAttribute(
     "style",
     `background-color: ${characterBackgroundField.value};
     white-space: pre;
-    font-family: ${base64Font !== undefined ? "render-font" : "monospace"};
+    font-family: ${fontNameField.value};
     font-variant-ligatures: none;`
   );
   let tempText = document.createElementNS(svgNS, "text");
-  tempText.setAttribute("font-family", fontFamily);
   tempText.setAttribute("font-size", fontSize);
   tempText.textContent = char;
   tempSvg.appendChild(tempText);
@@ -120,25 +104,16 @@ function measureCharacterWidth(char, fontFamily, fontSize) {
 function createCharacterAtlas() {
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
-  const svgStyle = document.createElementNS(svgNS, "style");
-  svgStyle.textContent = `@font-face {
-    font-family: render-font;
-    src: url('${base64Font}');
-    }`;
-  svg.appendChild(svgStyle);
-
-  let fontFamily = base64Font !== undefined ? "render-font" : "monospace";
 
   svg.setAttribute(
     "style",
     `background-color: ${characterBackgroundField.value};
-    font-family: ${fontFamily};
+    font-family: ${fontNameField.value};
     font-variant-ligatures: none;`
   );
   // Measure character width
   let [initialCharWidth, initialCharHeight] = measureCharacterWidth(
     "M",
-    fontFamily,
     fontSize
   );
   let fontWidth = 8;
@@ -154,8 +129,6 @@ function createCharacterAtlas() {
     textElem.setAttribute("fill", characterForegroundField.value);
 
     textElem.setAttribute("font-size", `${adjustedFontSize}px`);
-    textElem.setAttribute("kerning", "0");
-    textElem.setAttribute("letter-spacing", "0");
     textElem.textContent = charsField.value[i];
     svg.appendChild(textElem);
   }
@@ -299,17 +272,11 @@ async function setupWebGL() {
 function getOutputSVG(pixelData) {
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
-  const svgStyle = document.createElementNS(svgNS, "style");
-  svgStyle.textContent = `@font-face {
-    font-family: render-font;
-    src: url('${base64Font}');
-  }`;
-  svg.appendChild(svgStyle);
   svg.setAttribute(
     "style",
     `background-color: ${characterBackgroundField.value};
     white-space: pre;
-    font-family: ${base64Font !== undefined ? "render-font" : "monospace"};
+    font-family: ${fontNameField.value};
     font-variant-ligatures: none;`
   );
 
@@ -354,7 +321,6 @@ let prevChars;
 let prevBackground;
 let prevForeground;
 let prevLineHeight;
-let prevBase64Font;
 
 async function draw() {
   if (img === undefined) {
@@ -366,8 +332,7 @@ async function draw() {
     prevChars !== charsField.value ||
     prevBackground !== characterBackgroundField.value ||
     prevForeground !== characterForegroundField.value ||
-    prevLineHeight !== lineHeightField.value ||
-    prevBase64Font !== base64Font
+    prevLineHeight !== lineHeightField.value
   ) {
     let characterAtlas = createCharacterAtlas();
     characterAtlasImage = await svgToImage(characterAtlas);
@@ -381,7 +346,6 @@ async function draw() {
     prevBackground = characterBackgroundField.value;
     prevForeground = characterForegroundField.value;
     prevLineHeight = lineHeightField.value;
-    prevBase64Font = base64Font;
   }
 
   if (prevImg !== img) {
