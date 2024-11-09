@@ -1,10 +1,9 @@
 let charWidth;
 let charHeight;
+let fontSize = 12;
+
 let widthInChars;
 let heightInChars;
-
-const fontSize = 12;
-let adjustedFontSize;
 
 let img;
 let gl;
@@ -119,16 +118,16 @@ function createCharacterAtlas() {
   let fontWidth = 8;
   let charWidthScale = fontWidth / initialCharWidth;
   let adjustedCharHeight = initialCharHeight * charWidthScale;
-  adjustedFontSize = fontSize * charWidthScale;
+  fontSize *= charWidthScale;
 
   for (let i = 0; i < charsField.value.length; i++) {
     let textElem = document.createElementNS(svgNS, "text");
     textElem.setAttribute("x", i * 3 * fontWidth);
-    textElem.setAttribute("y", adjustedFontSize); // Adjust 'y' as needed
+    textElem.setAttribute("y", fontSize); // Adjust 'y' as needed
     // textElem.setAttribute("font-family", fontFamily);
     textElem.setAttribute("fill", characterForegroundField.value);
 
-    textElem.setAttribute("font-size", `${adjustedFontSize}px`);
+    textElem.setAttribute("font-size", `${fontSize}px`);
     textElem.textContent = charsField.value[i];
     svg.appendChild(textElem);
   }
@@ -141,22 +140,6 @@ function createCharacterAtlas() {
   document.body.appendChild(svg);
 
   return new XMLSerializer().serializeToString(svg);
-
-  // const svgText = document.createElementNS(svgNS, "text");
-  // svgText.setAttribute("x", 0);
-  // svgText.setAttribute("y", fontSize); // Align text with the top
-  // svgText.setAttribute("fill", characterForegroundField.value);
-  // svgText.setAttribute("font-size", fontSize);
-  // svgText.innerHTML = charsField.value.replaceAll(" ", "&nbsp;");
-  // svg.appendChild(svgText);
-
-  // document.body.appendChild(svg);
-  // const textBBox = svgText.getBBox();
-  // document.body.removeChild(svg);
-
-  // svg.setAttribute("width", textBBox.width);
-  // svg.setAttribute("height", textBBox.height);
-  // return new XMLSerializer().serializeToString(svg);
 }
 
 async function loadShaderFile(url) {
@@ -258,7 +241,6 @@ async function setupWebGL() {
 
   gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-  // Set up vertex attributes in WebGL2
   const positionAttributeLocation = gl.getAttribLocation(
     shaderProgram,
     "aVertexPosition"
@@ -296,10 +278,10 @@ function getOutputSVG(pixelData) {
     }
     let svgText = document.createElementNS(svgNS, "text");
     svgText.setAttribute("x", 0);
-    svgText.setAttribute("y", y * charHeight + charHeight); // Align text with the top
+    svgText.setAttribute("y", y * charHeight + charHeight);
     svgText.setAttribute("fill", characterForegroundField.value);
-    svgText.setAttribute("font-size", adjustedFontSize);
-    svgText.setAttribute("xml:space", "preserve"); // Preserve whitespace
+    svgText.setAttribute("font-size", fontSize);
+    svgText.setAttribute("xml:space", "preserve");
 
     svgText.textContent = textLine + "\n";
     svg.appendChild(svgText);
@@ -336,8 +318,6 @@ async function draw() {
   ) {
     let characterAtlas = createCharacterAtlas();
     characterAtlasImage = await svgToImage(characterAtlas);
-    console.log(characterAtlasImage.width);
-    console.log(characterAtlasImage.width / charsField.value.length / 3);
     charHeight = characterAtlasImage.height;
     charWidth = characterAtlasImage.width / charsField.value.length / 3;
     setupRequired = true;
@@ -359,8 +339,6 @@ async function draw() {
     heightInChars = Math.round(
       (img.height / img.width) * widthInChars * (charWidth / charHeight)
     );
-    // widthInChars = charWidth * charsField.value.length * 3;
-    // heightInChars = charHeight;
 
     canvas.width = widthInChars;
     canvas.height = heightInChars;
@@ -428,26 +406,6 @@ async function draw() {
     gl.UNSIGNED_BYTE, // type of data to read
     pixelData // typed array to store pixel data
   );
-
-  // i want to get the average brightness of each letter of the image
-  // the image consist of all the letters after each other with 3 spaces between each letter
-  // the letters have the height: charHeight and the width: charWidth
-  // the image is stored in pixelData with the format: RGBA
-  const writePre = document.getElementById("write");
-  for (x = 0; x < widthInChars / charWidth; x++) {
-    let sum = 0;
-    for (i = 0; i < charWidth; i++) {
-      for (j = 0; j < charHeight; j++) {
-        const index = (x * charWidth + i + j * widthInChars) * 3;
-        sum += pixelData[index] + pixelData[index + 1] + pixelData[index + 2];
-      }
-    }
-    writePre.textContent +=
-      charsField.value[x / 3] +
-      ": " +
-      sum / (charWidth * charHeight * 3) +
-      "\n";
-  }
 
   const svg = getOutputSVG(pixelData, widthInChars, heightInChars, charHeight);
   document.getElementById("out").innerHTML = svg.outerHTML;
