@@ -30,6 +30,7 @@ let scaleWeight8 = document.getElementById("scale-weight-8");
 let drawButton = document.getElementById("draw-button");
 let outputText = document.getElementById("out");
 let fontNameField = document.getElementById("font-name");
+let fontWeightField = document.getElementById("font-weight");
 
 imageField.addEventListener("change", function (event) {
   // Get the file from the input (first file in case of multiple)
@@ -54,6 +55,14 @@ imageField.addEventListener("change", function (event) {
     reader.readAsDataURL(file);
   }
 });
+
+function getFontStyle() {
+  return `background-color: ${characterBackgroundField.value};
+    white-space: pre;
+    font-family: ${fontNameField.value};
+    font-weight: ${fontWeightField.value};
+    font-variant-ligatures: none;`;
+}
 
 // Convert SVG string to an Image object
 function svgToImage(svgString) {
@@ -83,13 +92,7 @@ function loadImageFromURL(url) {
 function measureCharacterWidth(char, fontSize) {
   let svgNS = "http://www.w3.org/2000/svg";
   let tempSvg = document.createElementNS(svgNS, "svg");
-  tempSvg.setAttribute(
-    "style",
-    `background-color: ${characterBackgroundField.value};
-    white-space: pre;
-    font-family: ${fontNameField.value};
-    font-variant-ligatures: none;`
-  );
+  tempSvg.setAttribute("style", getFontStyle());
   let tempText = document.createElementNS(svgNS, "text");
   tempText.setAttribute("font-size", fontSize);
   tempText.textContent = char;
@@ -104,12 +107,7 @@ function createCharacterAtlas() {
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
 
-  svg.setAttribute(
-    "style",
-    `background-color: ${characterBackgroundField.value};
-    font-family: ${fontNameField.value};
-    font-variant-ligatures: none;`
-  );
+  svg.setAttribute("style", getFontStyle());
   // Measure character width
   let [initialCharWidth, initialCharHeight] = measureCharacterWidth(
     "M",
@@ -254,13 +252,7 @@ async function setupWebGL() {
 function getOutputSVG(pixelData) {
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
-  svg.setAttribute(
-    "style",
-    `background-color: ${characterBackgroundField.value};
-    white-space: pre;
-    font-family: ${fontNameField.value};
-    font-variant-ligatures: none;`
-  );
+  svg.setAttribute("style", getFontStyle());
 
   for (let y = 0; y < heightInChars; y++) {
     let textLine = "";
@@ -303,6 +295,8 @@ let prevChars;
 let prevBackground;
 let prevForeground;
 let prevLineHeight;
+let prevFontName;
+let prevFontWeight;
 
 async function draw() {
   if (img === undefined) {
@@ -314,7 +308,9 @@ async function draw() {
     prevChars !== charsField.value ||
     prevBackground !== characterBackgroundField.value ||
     prevForeground !== characterForegroundField.value ||
-    prevLineHeight !== lineHeightField.value
+    prevLineHeight !== lineHeightField.value ||
+    prevFontName !== fontNameField.value ||
+    prevFontWeight !== fontWeightField.value
   ) {
     let characterAtlas = createCharacterAtlas();
     characterAtlasImage = await svgToImage(characterAtlas);
@@ -326,6 +322,8 @@ async function draw() {
     prevBackground = characterBackgroundField.value;
     prevForeground = characterForegroundField.value;
     prevLineHeight = lineHeightField.value;
+    prevFontName = fontNameField.value;
+    prevFontWeight = fontWeightField.value;
   }
 
   if (prevImg !== img) {
