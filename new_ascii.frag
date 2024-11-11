@@ -7,6 +7,8 @@ uniform sampler2D atlas;
 uniform float[4] scales;
 uniform float[4] scaleWeights;
 uniform int numSymbols;
+uniform int atlasWidth;
+uniform int atlasHeight;
 uniform vec2 charSize;
 uniform vec2 resolution;
 
@@ -38,6 +40,14 @@ void main() {
   // the subtraction is to start of the texture
   vec2 coords = vTexCoord - (0.5 / resolution);
 
+  // vec2 coords = vTexCoord;
+
+  // float i = 49.0;
+
+  // vec2 atlasOffset = vec2(mod(i, float(atlasWidth)) / float(atlasWidth), floor(i / float(atlasWidth)) / float(atlasHeight));
+
+  // fragColor = textureLod(atlas, atlasOffset + coords / vec2(atlasWidth * 3, atlasHeight * 3), 0.0);
+
   float minCost = 10000.0;
   float chosenSymbolOffset = 0.0;
 
@@ -50,7 +60,7 @@ void main() {
       float xStep = 1.0 / (charSize.x / pow(2.0, scale)) / 2.0;
       float yStep = 1.0 / (charSize.y / pow(2.0, scale)) / 2.0;
 
-      vec2 atlasOffset = vec2(i / float(numSymbols),0.0);
+      vec2 atlasOffset = vec2(mod(i, float(atlasWidth)) / float(atlasWidth), floor(i / float(atlasWidth)) / float(atlasHeight));
       for (float x = xStep/2.0; x < 1.0; x += xStep) {
         for (float y = yStep/2.0; y < 1.0; y += yStep) {
           vec4 imgColor = textureLod(img, coords + vec2(x, y) / resolution, scale);
@@ -58,7 +68,7 @@ void main() {
           imgColor.rgb = vec3(interpolate(imgColor.r), interpolate(imgColor.g), interpolate(imgColor.b));
           imgColor.rgb = clamp(imgColor.rgb, 0.0, 1.0);
           
-          vec4 symbolColor = textureLod(atlas, atlasOffset + vec2(x, y) / vec2(numSymbols*2, 1.0), scale);
+          vec4 symbolColor = textureLod(atlas, atlasOffset + vec2(x, y) / vec2(atlasWidth * 3, atlasHeight * 3), scale);
           cost += colorDistance(imgColor.rgb, symbolColor.rgb) * (xStep * yStep) * scaleWeight;
         }
       }

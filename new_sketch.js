@@ -1,6 +1,8 @@
 let charWidth;
 let charHeight;
 let fontSize = 12;
+let atlasWidth;
+let atlasHeight;
 
 let widthInChars;
 let heightInChars;
@@ -10,27 +12,95 @@ let gl;
 let shaderProgram;
 let characterAtlasImage;
 
-let canvas = document.getElementById("glCanvas");
-let imageField = document.getElementById("image");
-let widthInCharsField = document.getElementById("symbol-width");
-let characterForegroundField = document.getElementById("character-foreground");
-let characterBackgroundField = document.getElementById("character-background");
-let lineHeightField = document.getElementById("line-height");
-let charsField = document.getElementById("chars");
-let brightnessCurveSvg = document.getElementById("brightness-curve");
-let brightnessCurve = new Curve(brightnessCurveSvg, [
+const maxCharacterAtlasWidth = 95;
+const canvas = document.getElementById("glCanvas");
+const imageField = document.getElementById("image");
+const widthInCharsField = document.getElementById("symbol-width");
+const lineHeightField = document.getElementById("line-height");
+const charsField = document.getElementById("chars");
+const brightnessCurveSvg = document.getElementById("brightness-curve");
+const brightnessCurve = new Curve(brightnessCurveSvg, [
   [0, 0],
   [1, 0.3],
 ]);
 
-let scaleWeight1 = document.getElementById("scale-weight-1");
-let scaleWeight2 = document.getElementById("scale-weight-2");
-let scaleWeight4 = document.getElementById("scale-weight-4");
-let scaleWeight8 = document.getElementById("scale-weight-8");
-let drawButton = document.getElementById("draw-button");
-let outputText = document.getElementById("out");
-let fontNameField = document.getElementById("font-name");
-let fontWeightField = document.getElementById("font-weight");
+const scaleWeight1 = document.getElementById("scale-weight-1");
+const scaleWeight2 = document.getElementById("scale-weight-2");
+const scaleWeight4 = document.getElementById("scale-weight-4");
+const scaleWeight8 = document.getElementById("scale-weight-8");
+const drawButton = document.getElementById("draw-button");
+const outputText = document.getElementById("out");
+const fontNameField = document.getElementById("font-name");
+const fontWeightField = document.getElementById("font-weight");
+
+const addCustomColorButton = document.getElementById("add-custom-color-button");
+const colorInput = document.getElementById("custom-color");
+const colorTypeSelector = document.getElementById("color-type");
+const colorListElement = document.getElementById("color-list");
+
+const backgroundColorList = ["#000000"];
+
+const foregroundColorList = ["#FFFFFF"];
+
+function renderColorList() {
+  colorListElement.innerHTML = "";
+
+  function renderColorListItem(colorType, color, deleteCallback) {
+    const colorBox = document.createElement("div");
+    colorBox.style.backgroundColor = color;
+    colorBox.style.width = "20px";
+    colorBox.style.height = "20px";
+    colorBox.style.display = "inline-block";
+    colorBox.style.border = "1px solid black";
+
+    const listItem = document.createElement("li");
+    listItem.textContent = `${
+      colorType.charAt(0).toUpperCase() + colorType.slice(1)
+    }: ${color}`;
+
+    const deleteButton = document.createElement("button");
+    deleteButton.textContent = "Delete";
+    deleteButton.addEventListener("click", function () {
+      deleteCallback();
+      renderColorList();
+    });
+
+    listItem.appendChild(colorBox);
+    listItem.appendChild(deleteButton);
+    colorListElement.appendChild(listItem);
+  }
+
+  foregroundColorList.forEach((color) => {
+    renderColorListItem("foreground", color, function () {
+      const index = foregroundColorList.indexOf(color);
+      foregroundColorList.splice(index, 1);
+    });
+  });
+  backgroundColorList.forEach((color) => {
+    renderColorListItem("background", color, function () {
+      const index = backgroundColorList.indexOf(color);
+      backgroundColorList.splice(index, 1);
+    });
+  });
+}
+
+renderColorList();
+
+addCustomColorButton.addEventListener("click", function () {
+  const color = colorInput.value;
+  const colorList =
+    colorTypeSelector.value === "background"
+      ? backgroundColorList
+      : foregroundColorList;
+
+  if (colorList.some((item) => item === color)) {
+    return;
+  }
+
+  colorList.push(color);
+
+  renderColorList();
+});
 
 imageField.addEventListener("change", function (event) {
   // Get the file from the input (first file in case of multiple)
@@ -56,9 +126,24 @@ imageField.addEventListener("change", function (event) {
   }
 });
 
+function getCharacterColorList() {
+  const characterColorList = [];
+  backgroundColorList.forEach((backgroundColor) => {
+    foregroundColorList.forEach((foregroundColor) => {
+      charsField.value.split("").forEach((character) => {
+        characterColorList.push({
+          backgroundColor,
+          foregroundColor,
+          character,
+        });
+      });
+    });
+  });
+  return characterColorList;
+}
+
 function getFontStyle() {
-  return `background-color: ${characterBackgroundField.value};
-    white-space: pre;
+  return `white-space: pre;
     font-family: ${fontNameField.value};
     font-weight: ${fontWeightField.value};
     font-variant-ligatures: none;`;
@@ -103,7 +188,7 @@ function measureCharacterWidth(char, fontSize) {
   return [bbox.width, bbox.height];
 }
 
-function createCharacterAtlas() {
+async function createCharacterAtlas() {
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
 
@@ -118,26 +203,50 @@ function createCharacterAtlas() {
   let adjustedCharHeight = initialCharHeight * charWidthScale;
   fontSize *= charWidthScale;
 
-  for (let i = 0; i < charsField.value.length; i++) {
+  let calculatedLineHeight = Math.round(
+    adjustedCharHeight * lineHeightField.value
+  );
+
+  let characterColorList = getCharacterColorList();
+
+  for (let i = 0; i < characterColorList.length; i++) {
+    const characterColor = characterColorList[i];
+
+    let y = Math.floor(i / maxCharacterAtlasWidth);
+    let x = i % maxCharacterAtlasWidth;
+
+    let backgroundElem = document.createElementNS(svgNS, "rect");
+    backgroundElem.setAttribute("x", x * 3 * fontWidth);
+    backgroundElem.setAttribute("y", y * 3 * calculatedLineHeight);
+    backgroundElem.setAttribute("width", fontWidth * 3);
+    backgroundElem.setAttribute("height", calculatedLineHeight * 3);
+    backgroundElem.setAttribute("fill", characterColor.backgroundColor);
+    svg.appendChild(backgroundElem);
+
     let textElem = document.createElementNS(svgNS, "text");
-    textElem.setAttribute("x", i * 3 * fontWidth);
-    textElem.setAttribute("y", fontSize); // Adjust 'y' as needed
-    // textElem.setAttribute("font-family", fontFamily);
-    textElem.setAttribute("fill", characterForegroundField.value);
+    textElem.setAttribute("x", x * 3 * fontWidth);
+    textElem.setAttribute("y", fontSize + y * 3 * calculatedLineHeight);
+    textElem.setAttribute("fill", characterColor.foregroundColor);
 
     textElem.setAttribute("font-size", `${fontSize}px`);
-    textElem.textContent = charsField.value[i];
+    textElem.textContent = characterColor.character;
     svg.appendChild(textElem);
   }
 
   // Set overall SVG dimensions
-  console.log(fontWidth);
-  svg.setAttribute("width", fontWidth * charsField.value.length * 3);
-  svg.setAttribute("height", adjustedCharHeight * lineHeightField.value); // Adjust as needed for line height
+  atlasWidth = maxCharacterAtlasWidth;
+  atlasHeight = Math.ceil(characterColorList.length / maxCharacterAtlasWidth);
+
+  svg.setAttribute("width", fontWidth * atlasWidth * 3);
+  svg.setAttribute("height", calculatedLineHeight * atlasHeight * 3);
 
   document.body.appendChild(svg);
 
-  return new XMLSerializer().serializeToString(svg);
+  let serializedSvg = new XMLSerializer().serializeToString(svg);
+
+  characterAtlasImage = await svgToImage(serializedSvg);
+  charWidth = characterAtlasImage.width / atlasWidth / 3;
+  charHeight = characterAtlasImage.height / atlasHeight / 3;
 }
 
 async function loadShaderFile(url) {
@@ -254,8 +363,23 @@ function getOutputSVG(pixelData) {
   const svg = document.createElementNS(svgNS, "svg");
   svg.setAttribute("style", getFontStyle());
 
+  let characterColorList = getCharacterColorList();
+
+  let svgText = document.createElementNS(svgNS, "text");
+  svgText.setAttribute("x", 0);
+  svgText.setAttribute("y", 0);
+  svgText.setAttribute("style", getFontStyle());
+  svgText.setAttribute("font-size", fontSize);
+  svgText.setAttribute("xml:space", "preserve");
+
   for (let y = 0; y < heightInChars; y++) {
-    let textLine = "";
+    let wrapperTspan = document.createElementNS(svgNS, "tspan");
+    wrapperTspan.setAttribute("x", 0);
+    wrapperTspan.setAttribute("y", y * charHeight + charHeight);
+    wrapperTspan.setAttribute("sodipodi:role", "line");
+
+    let currentColor = undefined;
+    let sameColoredText = "";
     for (let x = 0; x < widthInChars; x++) {
       let index = (x + y * widthInChars) * 4;
       let r = pixelData[index] / 256;
@@ -263,21 +387,55 @@ function getOutputSVG(pixelData) {
       let b = pixelData[index + 2] / 256;
       let a = pixelData[index + 3] / 256;
 
-      let chosenSymbol =
-        r + g / 256.0 + b / (256.0 * 256.0) + a / (256.0 * 256.0 * 256.0);
-      let symbolIndex = Math.round(chosenSymbol * charsField.value.length);
-      textLine += charsField.value.charAt(symbolIndex);
-    }
-    let svgText = document.createElementNS(svgNS, "text");
-    svgText.setAttribute("x", 0);
-    svgText.setAttribute("y", y * charHeight + charHeight);
-    svgText.setAttribute("fill", characterForegroundField.value);
-    svgText.setAttribute("font-size", fontSize);
-    svgText.setAttribute("xml:space", "preserve");
+      let chosenSymbol = r + g / 256 + b / 256 / 256 + a / 256 / 256 / 256;
+      let symbolIndex = Math.round(chosenSymbol * characterColorList.length);
+      let characterColor = characterColorList[symbolIndex];
 
-    svgText.textContent = textLine + "\n";
-    svg.appendChild(svgText);
+      let svgRect = document.createElementNS(svgNS, "rect");
+      svgRect.setAttribute("x", x * charWidth);
+      svgRect.setAttribute("y", y * charHeight);
+      svgRect.setAttribute("width", charWidth);
+      svgRect.setAttribute("height", charHeight);
+      svgRect.setAttribute("fill", characterColor.backgroundColor);
+      svg.appendChild(svgRect);
+
+      if (
+        currentColor === characterColor.foregroundColor ||
+        currentColor === undefined
+      ) {
+        sameColoredText += characterColor.character;
+        currentColor = characterColor.foregroundColor;
+        continue;
+      }
+
+      let lineContent = document.createElementNS(svgNS, "tspan");
+      lineContent.setAttribute("fill", currentColor);
+      lineContent.textContent = sameColoredText;
+      wrapperTspan.appendChild(lineContent);
+
+      sameColoredText = characterColor.character;
+      currentColor = characterColor.foregroundColor;
+      // lineContent += `<tspan fill="${characterColor.foregroundColor}">${characterColor.character}</tspan>`;
+    }
+    if (sameColoredText !== "") {
+      let lineContent = document.createElementNS(svgNS, "tspan");
+      lineContent.setAttribute("fill", currentColor);
+      lineContent.textContent = sameColoredText;
+      wrapperTspan.appendChild(lineContent);
+    }
+
+    svgText.appendChild(wrapperTspan);
+    // let svgText = document.createElementNS(svgNS, "text");
+    // svgText.setAttribute("x", 0);
+    // svgText.setAttribute("y", y * charHeight + charHeight);
+    // svgText.setAttribute("fill", characterForegroundField.value);
+    // svgText.setAttribute("font-size", fontSize);
+    // svgText.setAttribute("xml:space", "preserve");
+
+    // svgText.textContent = textLine + "\n";
   }
+
+  svg.appendChild(svgText);
 
   document.body.appendChild(svg);
   const textBBox = svg.getBBox();
@@ -292,8 +450,8 @@ function getOutputSVG(pixelData) {
 let prevImg;
 let prevWidthInChars;
 let prevChars;
-let prevBackground;
-let prevForeground;
+let prevBackgroundColorList;
+let prevForegroundColorList;
 let prevLineHeight;
 let prevFontName;
 let prevFontWeight;
@@ -306,21 +464,18 @@ async function draw() {
   if (
     prevWidthInChars !== widthInCharsField.value ||
     prevChars !== charsField.value ||
-    prevBackground !== characterBackgroundField.value ||
-    prevForeground !== characterForegroundField.value ||
+    prevBackgroundColorList !== backgroundColorList ||
+    prevForegroundColorList !== foregroundColorList ||
     prevLineHeight !== lineHeightField.value ||
     prevFontName !== fontNameField.value ||
     prevFontWeight !== fontWeightField.value
   ) {
-    let characterAtlas = createCharacterAtlas();
-    characterAtlasImage = await svgToImage(characterAtlas);
-    charHeight = characterAtlasImage.height;
-    charWidth = characterAtlasImage.width / charsField.value.length / 3;
+    await createCharacterAtlas();
     setupRequired = true;
     prevWidthInChars = widthInCharsField.value;
     prevChars = charsField.value;
-    prevBackground = characterBackgroundField.value;
-    prevForeground = characterForegroundField.value;
+    prevBackgroundColorList = Array.from(backgroundColorList);
+    prevForegroundColorList = Array.from(foregroundColorList);
     prevLineHeight = lineHeightField.value;
     prevFontName = fontNameField.value;
     prevFontWeight = fontWeightField.value;
@@ -356,6 +511,11 @@ async function draw() {
     "scaleWeights"
   );
   const numSymbolsLocation = gl.getUniformLocation(shaderProgram, "numSymbols");
+  const atlasWidthLocation = gl.getUniformLocation(shaderProgram, "atlasWidth");
+  const atlasHeightLocation = gl.getUniformLocation(
+    shaderProgram,
+    "atlasHeight"
+  );
   const charSizeLocation = gl.getUniformLocation(shaderProgram, "charSize");
   const resolutionLocation = gl.getUniformLocation(shaderProgram, "resolution");
   const curveLocation = gl.getUniformLocation(shaderProgram, "curve");
@@ -379,9 +539,12 @@ async function draw() {
     parseFloat(scaleWeight8.value),
   ]);
 
-  console.log(charsField.value.length);
+  let characterColorList = getCharacterColorList();
+  console.log(characterColorList.length);
   console.log(charsField.value);
-  gl.uniform1i(numSymbolsLocation, charsField.value.length);
+  gl.uniform1i(numSymbolsLocation, characterColorList.length);
+  gl.uniform1i(atlasWidthLocation, atlasWidth);
+  gl.uniform1i(atlasHeightLocation, atlasHeight);
 
   console.log(charWidth, charHeight);
 
