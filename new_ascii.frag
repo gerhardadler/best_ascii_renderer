@@ -49,7 +49,7 @@ void main() {
   // fragColor = textureLod(atlas, atlasOffset + coords / vec2(atlasWidth * 3, atlasHeight * 3), 0.0);
 
   float minCost = 10000.0;
-  float chosenSymbolOffset = 0.0;
+  int chosenSymbolOffset = 0;
 
   for (float i = 0.0; i < float(numSymbols); i++) {
     float cost = 0.0;
@@ -76,17 +76,22 @@ void main() {
 
     if (cost < minCost) {
       minCost = cost;
-      chosenSymbolOffset = float(i);
+      chosenSymbolOffset = int(i);
     }
   }
 
-  float value = chosenSymbolOffset / float(numSymbols);
+  int mask = 255;
+  int value = chosenSymbolOffset;
+
   // encode value to fragcolor
   vec4 encodedColor;
-  encodedColor.r = fract(value);
-  encodedColor.g = fract(value * 256.0);
-  encodedColor.b = fract(value * 256.0 * 256.0);
-  encodedColor.a = fract(value * 256.0 * 256.0 * 256.0);
+  encodedColor.r = float(value & mask) / 255.0;
+  value >>= 8;
+  encodedColor.g = float(value & mask) / 255.0;
+  value >>= 8;
+  encodedColor.b = float(value & mask) / 255.0;
+  value >>= 8;
+  encodedColor.a = float(value & mask) / 255.0;
 
   // encodedColor = textureLod(atlas, coords, 3.0);
   

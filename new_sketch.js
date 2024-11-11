@@ -382,13 +382,13 @@ function getOutputSVG(pixelData) {
     let sameColoredText = "";
     for (let x = 0; x < widthInChars; x++) {
       let index = (x + y * widthInChars) * 4;
-      let r = pixelData[index] / 256;
-      let g = pixelData[index + 1] / 256;
-      let b = pixelData[index + 2] / 256;
-      let a = pixelData[index + 3] / 256;
+      let r = pixelData[index];
+      let g = pixelData[index + 1];
+      let b = pixelData[index + 2];
+      let a = pixelData[index + 3];
 
-      let chosenSymbol = r + g / 256 + b / 256 / 256 + a / 256 / 256 / 256;
-      let symbolIndex = Math.round(chosenSymbol * characterColorList.length);
+      let mask = 255;
+      let symbolIndex = r + (g << 8) + (b << 16) + (a << 24);
       let characterColor = characterColorList[symbolIndex];
 
       let svgRect = document.createElementNS(svgNS, "rect");
