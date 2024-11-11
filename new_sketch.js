@@ -270,7 +270,7 @@ function compileShader(gl, sourceCode, type) {
 
 async function initShaders(gl) {
   const vertexShaderSource = await loadShaderFile("ascii.vert");
-  const fragmentShaderSource = await loadShaderFile("new_ascii.frag");
+  const fragmentShaderSource = await loadShaderFile("new_ascii_new.frag");
 
   const vertexShader = compileShader(gl, vertexShaderSource, gl.VERTEX_SHADER);
   const fragmentShader = compileShader(
@@ -361,7 +361,7 @@ async function setupWebGL() {
 function getOutputSVG(pixelData) {
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
-  svg.setAttribute("style", getFontStyle());
+  svg.setAttribute("style", getFontStyle() + "background-color: black;");
 
   let characterColorList = getCharacterColorList();
 
@@ -376,7 +376,6 @@ function getOutputSVG(pixelData) {
     let wrapperTspan = document.createElementNS(svgNS, "tspan");
     wrapperTspan.setAttribute("x", 0);
     wrapperTspan.setAttribute("y", y * charHeight + charHeight);
-    wrapperTspan.setAttribute("sodipodi:role", "line");
 
     let currentColor = undefined;
     let sameColoredText = "";
@@ -387,17 +386,16 @@ function getOutputSVG(pixelData) {
       let b = pixelData[index + 2];
       let a = pixelData[index + 3];
 
-      let mask = 255;
       let symbolIndex = r + (g << 8) + (b << 16) + (a << 24);
       let characterColor = characterColorList[symbolIndex];
 
-      let svgRect = document.createElementNS(svgNS, "rect");
-      svgRect.setAttribute("x", x * charWidth);
-      svgRect.setAttribute("y", y * charHeight);
-      svgRect.setAttribute("width", charWidth);
-      svgRect.setAttribute("height", charHeight);
-      svgRect.setAttribute("fill", characterColor.backgroundColor);
-      svg.appendChild(svgRect);
+      // let svgRect = document.createElementNS(svgNS, "rect");
+      // svgRect.setAttribute("x", x * charWidth);
+      // svgRect.setAttribute("y", y * charHeight);
+      // svgRect.setAttribute("width", charWidth);
+      // svgRect.setAttribute("height", charHeight);
+      // svgRect.setAttribute("fill", characterColor.backgroundColor);
+      // svg.appendChild(svgRect);
 
       if (
         currentColor === characterColor.foregroundColor ||
@@ -417,12 +415,10 @@ function getOutputSVG(pixelData) {
       currentColor = characterColor.foregroundColor;
       // lineContent += `<tspan fill="${characterColor.foregroundColor}">${characterColor.character}</tspan>`;
     }
-    if (sameColoredText !== "") {
-      let lineContent = document.createElementNS(svgNS, "tspan");
-      lineContent.setAttribute("fill", currentColor);
-      lineContent.textContent = sameColoredText;
-      wrapperTspan.appendChild(lineContent);
-    }
+    let lineContent = document.createElementNS(svgNS, "tspan");
+    lineContent.setAttribute("fill", currentColor);
+    lineContent.textContent = sameColoredText + "\n";
+    wrapperTspan.appendChild(lineContent);
 
     svgText.appendChild(wrapperTspan);
     // let svgText = document.createElementNS(svgNS, "text");
@@ -485,6 +481,8 @@ async function draw() {
     setupRequired = true;
     prevImg = img;
   }
+
+  setupRequired = true;
 
   if (setupRequired) {
     console.log("Setting up WebGL");
