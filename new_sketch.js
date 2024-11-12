@@ -33,19 +33,18 @@ const outputText = document.getElementById("out");
 const fontNameField = document.getElementById("font-name");
 const fontWeightField = document.getElementById("font-weight");
 
+const backgroundColorField = document.getElementById("background-color");
+
 const addCustomColorButton = document.getElementById("add-custom-color-button");
 const colorInput = document.getElementById("custom-color");
-const colorTypeSelector = document.getElementById("color-type");
 const colorListElement = document.getElementById("color-list");
-
-const backgroundColorList = ["#000000"];
 
 const foregroundColorList = ["#FFFFFF"];
 
 function renderColorList() {
   colorListElement.innerHTML = "";
 
-  function renderColorListItem(colorType, color, deleteCallback) {
+  function renderColorListItem(color, deleteCallback) {
     const colorBox = document.createElement("div");
     colorBox.style.backgroundColor = color;
     colorBox.style.width = "20px";
@@ -54,9 +53,7 @@ function renderColorList() {
     colorBox.style.border = "1px solid black";
 
     const listItem = document.createElement("li");
-    listItem.textContent = `${
-      colorType.charAt(0).toUpperCase() + colorType.slice(1)
-    }: ${color}`;
+    listItem.textContent = `${color}`;
 
     const deleteButton = document.createElement("button");
     deleteButton.textContent = "Delete";
@@ -71,15 +68,9 @@ function renderColorList() {
   }
 
   foregroundColorList.forEach((color) => {
-    renderColorListItem("foreground", color, function () {
+    renderColorListItem(color, function () {
       const index = foregroundColorList.indexOf(color);
       foregroundColorList.splice(index, 1);
-    });
-  });
-  backgroundColorList.forEach((color) => {
-    renderColorListItem("background", color, function () {
-      const index = backgroundColorList.indexOf(color);
-      backgroundColorList.splice(index, 1);
     });
   });
 }
@@ -88,16 +79,12 @@ renderColorList();
 
 addCustomColorButton.addEventListener("click", function () {
   const color = colorInput.value;
-  const colorList =
-    colorTypeSelector.value === "background"
-      ? backgroundColorList
-      : foregroundColorList;
 
-  if (colorList.some((item) => item === color)) {
+  if (foregroundColorList.some((item) => item === color)) {
     return;
   }
 
-  colorList.push(color);
+  foregroundColorList.push(color);
 
   renderColorList();
 });
@@ -128,14 +115,11 @@ imageField.addEventListener("change", function (event) {
 
 function getCharacterColorList() {
   const characterColorList = [];
-  backgroundColorList.forEach((backgroundColor) => {
-    foregroundColorList.forEach((foregroundColor) => {
-      charsField.value.split("").forEach((character) => {
-        characterColorList.push({
-          backgroundColor,
-          foregroundColor,
-          character,
-        });
+  foregroundColorList.forEach((foregroundColor) => {
+    charsField.value.split("").forEach((character) => {
+      characterColorList.push({
+        foregroundColor,
+        character,
       });
     });
   });
@@ -192,7 +176,10 @@ async function createCharacterAtlas() {
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
 
-  svg.setAttribute("style", getFontStyle());
+  svg.setAttribute(
+    "style",
+    getFontStyle() + `background: ${backgroundColorField.value};`
+  );
   // Measure character width
   let [initialCharWidth, initialCharHeight] = measureCharacterWidth(
     "M",
@@ -214,14 +201,6 @@ async function createCharacterAtlas() {
 
     let y = Math.floor(i / maxCharacterAtlasWidth);
     let x = i % maxCharacterAtlasWidth;
-
-    let backgroundElem = document.createElementNS(svgNS, "rect");
-    backgroundElem.setAttribute("x", x * 3 * fontWidth);
-    backgroundElem.setAttribute("y", y * 3 * calculatedLineHeight);
-    backgroundElem.setAttribute("width", fontWidth * 3);
-    backgroundElem.setAttribute("height", calculatedLineHeight * 3);
-    backgroundElem.setAttribute("fill", characterColor.backgroundColor);
-    svg.appendChild(backgroundElem);
 
     let textElem = document.createElementNS(svgNS, "text");
     textElem.setAttribute("x", x * 3 * fontWidth);
@@ -361,7 +340,7 @@ async function setupWebGL() {
 function getOutputSVG(pixelData) {
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
-  svg.setAttribute("style", getFontStyle() + "background-color: black;");
+  svg.setAttribute("style", getFontStyle());
 
   let characterColorList = getCharacterColorList();
 
@@ -389,14 +368,6 @@ function getOutputSVG(pixelData) {
       let symbolIndex = r + (g << 8) + (b << 16) + (a << 24);
       let characterColor = characterColorList[symbolIndex];
 
-      // let svgRect = document.createElementNS(svgNS, "rect");
-      // svgRect.setAttribute("x", x * charWidth);
-      // svgRect.setAttribute("y", y * charHeight);
-      // svgRect.setAttribute("width", charWidth);
-      // svgRect.setAttribute("height", charHeight);
-      // svgRect.setAttribute("fill", characterColor.backgroundColor);
-      // svg.appendChild(svgRect);
-
       if (
         currentColor === characterColor.foregroundColor ||
         currentColor === undefined
@@ -421,14 +392,6 @@ function getOutputSVG(pixelData) {
     wrapperTspan.appendChild(lineContent);
 
     svgText.appendChild(wrapperTspan);
-    // let svgText = document.createElementNS(svgNS, "text");
-    // svgText.setAttribute("x", 0);
-    // svgText.setAttribute("y", y * charHeight + charHeight);
-    // svgText.setAttribute("fill", characterForegroundField.value);
-    // svgText.setAttribute("font-size", fontSize);
-    // svgText.setAttribute("xml:space", "preserve");
-
-    // svgText.textContent = textLine + "\n";
   }
 
   svg.appendChild(svgText);
@@ -436,6 +399,14 @@ function getOutputSVG(pixelData) {
   document.body.appendChild(svg);
   const textBBox = svg.getBBox();
   document.body.removeChild(svg);
+
+  const backgroundRect = document.createElementNS(svgNS, "rect");
+  backgroundRect.setAttribute("x", textBBox.x);
+  backgroundRect.setAttribute("y", textBBox.y);
+  backgroundRect.setAttribute("width", textBBox.width);
+  backgroundRect.setAttribute("height", textBBox.height);
+  backgroundRect.setAttribute("fill", backgroundColorField.value);
+  svg.insertBefore(backgroundRect, svg.firstChild);
 
   svg.setAttribute("width", textBBox.width);
   svg.setAttribute("height", textBBox.height);
@@ -460,8 +431,7 @@ async function draw() {
   if (
     prevWidthInChars !== widthInCharsField.value ||
     prevChars !== charsField.value ||
-    prevBackgroundColorList !== backgroundColorList ||
-    prevForegroundColorList !== foregroundColorList ||
+    prevForegroundColorList.every((v, i) => v === foregroundColorList[i]) ||
     prevLineHeight !== lineHeightField.value ||
     prevFontName !== fontNameField.value ||
     prevFontWeight !== fontWeightField.value
@@ -470,7 +440,6 @@ async function draw() {
     setupRequired = true;
     prevWidthInChars = widthInCharsField.value;
     prevChars = charsField.value;
-    prevBackgroundColorList = Array.from(backgroundColorList);
     prevForegroundColorList = Array.from(foregroundColorList);
     prevLineHeight = lineHeightField.value;
     prevFontName = fontNameField.value;
