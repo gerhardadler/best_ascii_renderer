@@ -11,53 +11,64 @@
   </head>
 
   <body>
-    <label>Image</label>
-    <input type="file" id="image" /><br />
-    <label>Font name (local)</label>
-    <input type="text" id="font-name" /><br />
-    <label>Font weight</label>
-    <input type="text" id="font-weight" /><br />
-    <label>Width in symbols</label>
-    <input type="number" id="symbol-width" value="64" /><br />
-    <label>Characters</label>
-    <textarea id="chars">
- !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~</textarea
-    ><br />
-    <label>Line height</label>
-    <label>Background color</label>
-    <input type="color" id="background-color" value="#000000" /><br />
-    <label>Add Custom Color</label>
-    <input type="color" id="custom-color" value="#FFFFFF" />
-    <button id="add-custom-color-button">Add Color</button>
-    <ul id="color-list"></ul>
-    <input type="number" id="line-height" value="1.2" /><br />
-    <label>Brightness curve</label><br />
-    <svg
-      id="brightness-curve"
-      width="600"
-      height="600"
-      xmlns="http://www.w3.org/2000/svg"
-      style="background: grey"
-    ></svg
-    ><br />
+    <header>
+      <fieldset>
+        <legend>Image</legend>
+        <label>File</label>
+        <input type="file" id="image" /><br />
+        <label>Brightness curve</label><br />
+        <svg
+          id="brightness-curve"
+          width="200"
+          height="200"
+          xmlns="http://www.w3.org/2000/svg"
+          style="background: grey"
+        ></svg
+        ><br />
+      </fieldset>
+      <fieldset>
+        <legend>Text</legend>
+        <label>Font name (local)</label>
+        <input type="text" id="font-name" /><br />
+        <label>Font weight</label>
+        <input type="text" id="font-weight" /><br />
+        <label>Line height</label>
+        <input type="number" id="line-height" value="1" /><br />
+        <label>Characters</label>
+        <textarea id="chars">
+     !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~</textarea
+        ><br />
+        <label>Background color</label>
+        <input type="color" id="background-color" value="#000000" /><br />
+        <label>Add Custom Color</label>
+        <input type="color" id="custom-color" value="#FFFFFF" />
+        <button id="add-custom-color-button">Add Color</button>
+        <ul id="color-list"></ul>
+      </fieldset>
+      <fieldset>
+        <legend>Output</legend>
+        <label>Width in symbols</label>
+        <input type="number" id="symbol-width" value="64" /><br />
+
+        <label>Scale Weight 1</label>
+        <input type="number" id="scale-weight-1" value="1.0" /><br />
+        <label>Scale Weight 2</label>
+        <input type="number" id="scale-weight-2" value="1.0" /><br />
+        <label>Scale Weight 4</label>
+        <input type="number" id="scale-weight-4" value="1.0" /><br />
+        <label>Scale Weight 8</label>
+        <input type="number" id="scale-weight-8" value="1.0" /><br />
+      </fieldset>
+      <button id="draw-button">Draw</button>
+      <button id="zoom-in">+</button>
+      <button id="zoom-out">-</button>
+    </header>
     <!-- <label>Contrast</label>
     <input type="number" id="contrast" value="1"><br>
     <label>Brightness</label>
     <input type="number" id="brightness" value="0"><br> -->
-    <label>Scale Weight 1</label>
-    <input type="number" id="scale-weight-1" value="1.0" /><br />
-    <label>Scale Weight 2</label>
-    <input type="number" id="scale-weight-2" value="1.0" /><br />
-    <label>Scale Weight 4</label>
-    <input type="number" id="scale-weight-4" value="1.0" /><br />
-    <label>Scale Weight 8</label>
-    <input type="number" id="scale-weight-8" value="1.0" /><br />
-    <button id="draw-button">Draw</button>
 
-    <br /><br />
     <div id="out"></div>
-    <pre id="write"></pre>
-    <canvas id="glCanvas"></canvas>
     <script src="src/curves.js"></script>
     <script src="new_sketch.js"></script>
   </body>

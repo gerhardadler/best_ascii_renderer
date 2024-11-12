@@ -13,7 +13,6 @@ let shaderProgram;
 let characterAtlasImage;
 
 const maxCharacterAtlasWidth = 95;
-const canvas = document.getElementById("glCanvas");
 const imageField = document.getElementById("image");
 const widthInCharsField = document.getElementById("symbol-width");
 const lineHeightField = document.getElementById("line-height");
@@ -38,6 +37,23 @@ const backgroundColorField = document.getElementById("background-color");
 const addCustomColorButton = document.getElementById("add-custom-color-button");
 const colorInput = document.getElementById("custom-color");
 const colorListElement = document.getElementById("color-list");
+
+const canvas = document.createElement("canvas");
+
+const zoomInButton = document.getElementById("zoom-in");
+const zoomOutButton = document.getElementById("zoom-out");
+
+let zoom = 1;
+
+zoomInButton.addEventListener("click", function () {
+  zoom += 0.1;
+  outputText.querySelector("svg").style.transform = `scale(${zoom})`;
+});
+
+zoomOutButton.addEventListener("click", function () {
+  zoom -= 0.1;
+  outputText.querySelector("svg").style.transform = `scale(${zoom})`;
+});
 
 const foregroundColorList = ["#FFFFFF"];
 
@@ -218,8 +234,6 @@ async function createCharacterAtlas() {
 
   svg.setAttribute("width", fontWidth * atlasWidth * 3);
   svg.setAttribute("height", calculatedLineHeight * atlasHeight * 3);
-
-  document.body.appendChild(svg);
 
   let serializedSvg = new XMLSerializer().serializeToString(svg);
 
@@ -431,7 +445,7 @@ async function draw() {
   if (
     prevWidthInChars !== widthInCharsField.value ||
     prevChars !== charsField.value ||
-    prevForegroundColorList.every((v, i) => v === foregroundColorList[i]) ||
+    !prevForegroundColorList.every((v, i) => v === foregroundColorList[i]) ||
     prevLineHeight !== lineHeightField.value ||
     prevFontName !== fontNameField.value ||
     prevFontWeight !== fontWeightField.value
@@ -536,7 +550,8 @@ async function draw() {
   );
 
   const svg = getOutputSVG(pixelData, widthInChars, heightInChars, charHeight);
-  document.getElementById("out").innerHTML = svg.outerHTML;
+  document.getElementById("out").innerHTML = "";
+  document.getElementById("out").appendChild(svg);
 }
 
 drawButton.addEventListener("click", draw, false);

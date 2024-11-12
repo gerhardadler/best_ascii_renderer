@@ -1,0 +1,10 @@
+#out {
+    max-width: 100%;
+    overflow: scroll;
+    height: 80vh;
+}
+
+#out svg {
+    transform: scale(1);
+    transform-origin: top left;
+}
