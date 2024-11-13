@@ -43,6 +43,10 @@ const canvas = document.createElement("canvas");
 const zoomInButton = document.getElementById("zoom-in");
 const zoomOutButton = document.getElementById("zoom-out");
 
+const pngWidthField = document.getElementById("png-width");
+const downloadPngButton = document.getElementById("download-png-button");
+const downloadSvgButton = document.getElementById("download-svg-button");
+
 let zoom = 1;
 
 zoomInButton.addEventListener("click", function () {
@@ -53,6 +57,48 @@ zoomInButton.addEventListener("click", function () {
 zoomOutButton.addEventListener("click", function () {
   zoom -= 0.1;
   outputText.querySelector("svg").style.transform = `scale(${zoom})`;
+});
+
+downloadPngButton.addEventListener("click", async function () {
+  const svg = outputText.querySelector("svg");
+  const svgImage = await svgToImage(new XMLSerializer().serializeToString(svg));
+
+  // create a canvas element to render the SVG to. remember to set the dimensions.
+  const canvas = document.createElement("canvas");
+  canvas.width = parseInt(pngWidthField.value);
+  console.log(pngWidthField.value);
+  console.log(svg.width.baseVal.value);
+  console.log(svg.height.baseVal.value);
+  canvas.height =
+    (parseInt(pngWidthField.value) / svg.width.baseVal.value) *
+    svg.height.baseVal.value;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(svgImage, 0, 0, canvas.width, canvas.height);
+
+  // create a blob from the canvas
+  canvas.toBlob((blob) => {
+    // create an anchor element
+    url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "output.png";
+    a.click();
+
+    URL.revokeObjectURL(url);
+  });
+});
+
+downloadSvgButton.addEventListener("click", function () {
+  const svg = outputText.querySelector("svg");
+  const svgString = new XMLSerializer().serializeToString(svg);
+  const blob = new Blob([svgString], { type: "image/svg+xml" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = "output.svg";
+  anchor.click();
+  URL.revokeObjectURL(url);
 });
 
 const foregroundColorList = ["#FFFFFF"];
