@@ -28,7 +28,7 @@ const scaleWeight2 = document.getElementById("scale-weight-2");
 const scaleWeight4 = document.getElementById("scale-weight-4");
 const scaleWeight8 = document.getElementById("scale-weight-8");
 const drawButton = document.getElementById("draw-button");
-const outputText = document.getElementById("out");
+const svgContainer = document.getElementById("svg-container");
 const fontNameField = document.getElementById("font-name");
 const fontWeightField = document.getElementById("font-weight");
 
@@ -38,7 +38,8 @@ const addCustomColorButton = document.getElementById("add-custom-color-button");
 const colorInput = document.getElementById("custom-color");
 const colorListElement = document.getElementById("color-list");
 
-const canvas = document.createElement("canvas");
+// const canvas = document.createElement("canvas");
+const canvas = document.getElementById("canvas");
 
 const zoomInButton = document.getElementById("zoom-in");
 const zoomOutButton = document.getElementById("zoom-out");
@@ -51,16 +52,16 @@ let zoom = 1;
 
 zoomInButton.addEventListener("click", function () {
   zoom += 0.1;
-  outputText.querySelector("svg").style.transform = `scale(${zoom})`;
+  svgContainer.style.transform = `scale(${zoom})`;
 });
 
 zoomOutButton.addEventListener("click", function () {
   zoom -= 0.1;
-  outputText.querySelector("svg").style.transform = `scale(${zoom})`;
+  svgContainer.style.transform = `scale(${zoom})`;
 });
 
 downloadPngButton.addEventListener("click", async function () {
-  const svg = outputText.querySelector("svg");
+  const svg = svgContainer.querySelector("svg");
   const svgImage = await svgToImage(new XMLSerializer().serializeToString(svg));
 
   // create a canvas element to render the SVG to. remember to set the dimensions.
@@ -90,7 +91,7 @@ downloadPngButton.addEventListener("click", async function () {
 });
 
 downloadSvgButton.addEventListener("click", function () {
-  const svg = outputText.querySelector("svg");
+  const svg = svgContainer.querySelector("svg");
   const svgString = new XMLSerializer().serializeToString(svg);
   const blob = new Blob([svgString], { type: "image/svg+xml" });
   const url = URL.createObjectURL(blob);
@@ -394,6 +395,8 @@ async function setupWebGL() {
   gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(positionAttributeLocation);
 
+  console.log("returning");
+
   return [gl, shaderProgram];
 }
 
@@ -423,9 +426,8 @@ function getOutputSVG(pixelData) {
       let r = pixelData[index];
       let g = pixelData[index + 1];
       let b = pixelData[index + 2];
-      let a = pixelData[index + 3];
 
-      let symbolIndex = r + (g << 8) + (b << 16) + (a << 24);
+      let symbolIndex = r + (g << 8) + (b << 16);
       let characterColor = characterColorList[symbolIndex];
 
       if (
@@ -477,7 +479,6 @@ function getOutputSVG(pixelData) {
 let prevImg;
 let prevWidthInChars;
 let prevChars;
-let prevBackgroundColorList;
 let prevForegroundColorList;
 let prevLineHeight;
 let prevFontName;
@@ -491,7 +492,10 @@ async function draw() {
   if (
     prevWidthInChars !== widthInCharsField.value ||
     prevChars !== charsField.value ||
-    !prevForegroundColorList.every((v, i) => v === foregroundColorList[i]) ||
+    !(
+      prevForegroundColorList.length === foregroundColorList &&
+      prevForegroundColorList.every((v, i) => v === foregroundColorList[i])
+    ) ||
     prevLineHeight !== lineHeightField.value ||
     prevFontName !== fontNameField.value ||
     prevFontWeight !== fontWeightField.value
@@ -596,8 +600,8 @@ async function draw() {
   );
 
   const svg = getOutputSVG(pixelData, widthInChars, heightInChars, charHeight);
-  document.getElementById("out").innerHTML = "";
-  document.getElementById("out").appendChild(svg);
+  svgContainer.innerHTML = "";
+  svgContainer.appendChild(svg);
 }
 
 drawButton.addEventListener("click", draw, false);

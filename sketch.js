@@ -53,7 +53,7 @@ function hexToRgb(hex) {
 }
 
 function preload() {
-  img = loadImage("assets/dylan.png");
+  img = loadImage("assets/2023-05-12-145710_1.jpg");
   img.filter(GRAY);
   asciiShaderProgram = loadShader("ascii.vert", "ascii.frag");
   renderShaderProgram = loadShader("render.vert", "render.frag");
@@ -233,8 +233,8 @@ function draw() {
   pg.rect(-symbolWidth / 2, -symbolHeight / 2, symbolWidth, symbolHeight);
   pg.resetShader();
 
-  tint(255, 255, 255, parseFloat(overlayOpacityField.value));
-  image(imgs[1], 0, 0);
+  tint(255, 255, 255, parseFloat(lineHeight.value));
+  image(atlases[8], 0, 0);
   noTint();
 
   pg.loadPixels();

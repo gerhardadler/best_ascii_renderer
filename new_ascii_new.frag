@@ -123,7 +123,7 @@ void main() {
   value >>= 8;
   encodedColor.b = float(value & mask) / 255.0;
   value >>= 8;
-  encodedColor.a = float(value & mask) / 255.0;
+  encodedColor.a = 1.0;
 
   // encodedColor = textureLod(atlas, coords, 3.0);
   
