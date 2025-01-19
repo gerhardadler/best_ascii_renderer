@@ -9,7 +9,8 @@ let heightInChars;
 
 let img;
 let gl;
-let shaderProgram;
+let asciiShaderProgram;
+let preprocessShaderProgram;
 let characterAtlasImage;
 
 const maxCharacterAtlasWidth = 95;
@@ -22,6 +23,9 @@ const brightnessCurve = new Curve(brightnessCurveSvg, [
   [0, 0],
   [1, 0.3],
 ]);
+const brightness = document.getElementById("brightness");
+const contrast = document.getElementById("contrast");
+const saturation = document.getElementById("saturation");
 
 const scaleWeight1 = document.getElementById("scale-weight-1");
 const scaleWeight2 = document.getElementById("scale-weight-2");
@@ -308,10 +312,7 @@ function compileShader(gl, sourceCode, type) {
   return shader;
 }
 
-async function initShaders(gl) {
-  const vertexShaderSource = await loadShaderFile("ascii.vert");
-  const fragmentShaderSource = await loadShaderFile("new_ascii_new.frag");
-
+async function initShaders(gl, vertexShaderSource, fragmentShaderSource) {
   const vertexShader = compileShader(gl, vertexShaderSource, gl.VERTEX_SHADER);
   const fragmentShader = compileShader(
     gl,
@@ -331,73 +332,127 @@ async function initShaders(gl) {
     );
   }
 
-  gl.useProgram(shaderProgram);
-
   return shaderProgram;
 }
 
-function loadTexture(gl, image) {
+function createTexture(gl, image = null, width = 0, height = 0) {
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
-  // Manually generate mipmaps
-  let width = image.width;
-  let height = image.height;
-  let level = 1;
-
-  // Loop until the texture is 1x1
-  while (width > 1 || height > 1) {
-    width = Math.max(1, width >> 1); // Divide width by 2
-    height = Math.max(1, height >> 1); // Divide height by 2
-
-    // Create a smaller canvas to render the mipmap level
-    const mipmapCanvas = document.createElement("canvas");
-    mipmapCanvas.width = width;
-    mipmapCanvas.height = height;
-
-    const ctx = mipmapCanvas.getContext("2d");
-    ctx.drawImage(image, 0, 0, width, height);
-
-    // Upload the mipmap level
+  if (image) {
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+  } else {
     gl.texImage2D(
       gl.TEXTURE_2D,
-      level,
+      0,
       gl.RGBA,
+      width,
+      height,
+      0,
       gl.RGBA,
       gl.UNSIGNED_BYTE,
-      mipmapCanvas
+      null
     );
-
-    level++;
   }
+
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  if (image !== null) {
+    // Manually generate mipmaps
+    let mipMapWidth = image.width;
+    let mipMapHeight = image.height;
+    let level = 1;
+
+    // Loop until the texture is 1x1
+    while (mipMapWidth > 1 || mipMapHeight > 1) {
+      mipMapWidth = Math.max(1, mipMapWidth >> 1); // Divide width by 2
+      mipMapHeight = Math.max(1, mipMapHeight >> 1); // Divide height by 2
+
+      // Create a smaller canvas to render the mipmap level
+      const mipmapCanvas = document.createElement("canvas");
+      mipmapCanvas.width = mipMapWidth;
+      mipmapCanvas.height = mipMapHeight;
+
+      const ctx = mipmapCanvas.getContext("2d");
+      ctx.drawImage(image, 0, 0, mipMapWidth, mipMapHeight);
+
+      // Upload the mipmap level
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        level,
+        gl.RGBA,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        mipmapCanvas
+      );
+
+      level++;
+    }
+  }
+
   return texture;
 }
 
-async function setupWebGL() {
-  gl = canvas.getContext("webgl2");
-  gl.viewport(0, 0, widthInChars, heightInChars);
-  shaderProgram = await initShaders(gl);
-
-  const vertexBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-
-  const vertices = new Float32Array([
-    -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, -1.0,
+// Create Buffers
+function createBuffers(gl) {
+  const positions = new Float32Array([
+    -1, -1, 0, 0, 1, -1, 1, 0, -1, 1, 0, 1, 1, -1, 1, 0, 1, 1, 1, 1, -1, 1, 0,
+    1,
   ]);
 
-  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
 
-  const positionAttributeLocation = gl.getAttribLocation(
-    shaderProgram,
-    "aVertexPosition"
+  const positionBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(
+    0,
+    2,
+    gl.FLOAT,
+    false,
+    4 * Float32Array.BYTES_PER_ELEMENT,
+    0
   );
-  gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
-  gl.enableVertexAttribArray(positionAttributeLocation);
 
-  console.log("returning");
+  gl.enableVertexAttribArray(1);
+  gl.vertexAttribPointer(
+    1,
+    2,
+    gl.FLOAT,
+    false,
+    4 * Float32Array.BYTES_PER_ELEMENT,
+    2 * Float32Array.BYTES_PER_ELEMENT
+  );
 
-  return [gl, shaderProgram];
+  return vao;
+}
+
+async function setupWebGL() {
+  const vertexShaderSource = await loadShaderFile("shaders/vertex.vert");
+  const asciiShaderSource = await loadShaderFile("shaders/ascii.frag");
+  const preprocessShaderSource = await loadShaderFile(
+    "shaders/preprocess_shader.frag"
+  );
+
+  gl = canvas.getContext("webgl2");
+  gl.viewport(0, 0, widthInChars, heightInChars);
+  asciiShaderProgram = await initShaders(
+    gl,
+    vertexShaderSource,
+    asciiShaderSource
+  );
+  preprocessShaderProgram = await initShaders(
+    gl,
+    vertexShaderSource,
+    preprocessShaderSource
+  );
+
+  return gl;
 }
 
 function getOutputSVG(pixelData) {
@@ -529,35 +584,133 @@ async function draw() {
 
     await setupWebGL();
   }
+  const vao = createBuffers(gl);
 
-  // get the uniform locations
-  const samplerUniformLocation = gl.getUniformLocation(shaderProgram, "img");
-  const atlasSamplerUniformLocation = gl.getUniformLocation(
-    shaderProgram,
-    "atlas"
+  const imageTexture = createTexture(gl, img);
+  const intermediateTexture = createTexture(
+    gl,
+    null,
+    canvas.width,
+    canvas.height
   );
-  const scalesLocation = gl.getUniformLocation(shaderProgram, "scales");
-  const scaleWeightsLocation = gl.getUniformLocation(
-    shaderProgram,
-    "scaleWeights"
+  const framebuffer = createFramebuffer(gl, intermediateTexture);
+
+  renderPreprocessShader(
+    gl,
+    preprocessShaderProgram,
+    imageTexture,
+    framebuffer,
+    vao
   );
-  const numSymbolsLocation = gl.getUniformLocation(shaderProgram, "numSymbols");
-  const atlasWidthLocation = gl.getUniformLocation(shaderProgram, "atlasWidth");
-  const atlasHeightLocation = gl.getUniformLocation(
-    shaderProgram,
-    "atlasHeight"
+
+  renderAsciiShader(gl, asciiShaderProgram, intermediateTexture);
+
+  const pixelData = new Uint8Array(widthInChars * heightInChars * 4); // 4 bytes per pixel
+
+  // Read pixels from the WebGL canvas (bottom-left to top-right)
+  gl.readPixels(
+    0, // x coordinate
+    0, // y coordinate (bottom-left corner)
+    widthInChars, // width of the canvas
+    heightInChars, // height of the canvas
+    gl.RGBA, // format to read (RGBA)
+    gl.UNSIGNED_BYTE, // type of data to read
+    pixelData // typed array to store pixel data
   );
-  const charSizeLocation = gl.getUniformLocation(shaderProgram, "charSize");
-  const resolutionLocation = gl.getUniformLocation(shaderProgram, "resolution");
-  const curveLocation = gl.getUniformLocation(shaderProgram, "curve");
+
+  const svg = getOutputSVG(pixelData, widthInChars, heightInChars, charHeight);
+  svgContainer.innerHTML = "";
+  svgContainer.appendChild(svg);
+}
+
+drawButton.addEventListener("click", draw, false);
+
+function renderPreprocessShader(gl, program, texture, framebuffer, vao) {
+  gl.useProgram(program);
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+  gl.bindVertexArray(vao);
+
+  // Set up attributes and uniforms
+
+  const preprocessImageUniform = gl.getUniformLocation(
+    preprocessShaderProgram,
+    "img"
+  );
+  const curveLocation = gl.getUniformLocation(
+    preprocessShaderProgram,
+    "brightnessCurve"
+  );
+
+  const brightnessLocation = gl.getUniformLocation(
+    preprocessShaderProgram,
+    "brightness"
+  );
+  const contrastLocation = gl.getUniformLocation(
+    preprocessShaderProgram,
+    "contrast"
+  );
+  const saturationLocation = gl.getUniformLocation(
+    preprocessShaderProgram,
+    "saturation"
+  );
 
   gl.activeTexture(gl.TEXTURE0);
-  const texture = loadTexture(gl, img);
   gl.bindTexture(gl.TEXTURE_2D, texture);
-  gl.uniform1i(samplerUniformLocation, 0);
+  gl.uniform1i(preprocessImageUniform, 0);
+
+  gl.uniform2fv(curveLocation, brightnessCurve.getPoints().flat());
+  gl.uniform1f(brightnessLocation, brightness.value);
+  gl.uniform1f(contrastLocation, contrast.value);
+  gl.uniform1f(saturationLocation, saturation.value);
+
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+}
+
+function renderAsciiShader(gl, program, texture) {
+  gl.viewport(0, 0, canvas.width, canvas.height);
+
+  gl.useProgram(program);
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null); // Render to the canvas
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
+  const asciiImageUniform = gl.getUniformLocation(asciiShaderProgram, "img");
+  const atlasSamplerUniformLocation = gl.getUniformLocation(
+    asciiShaderProgram,
+    "atlas"
+  );
+  const scalesLocation = gl.getUniformLocation(asciiShaderProgram, "scales");
+  const scaleWeightsLocation = gl.getUniformLocation(
+    asciiShaderProgram,
+    "scaleWeights"
+  );
+  const numSymbolsLocation = gl.getUniformLocation(
+    asciiShaderProgram,
+    "numSymbols"
+  );
+  const atlasWidthLocation = gl.getUniformLocation(
+    asciiShaderProgram,
+    "atlasWidth"
+  );
+  const atlasHeightLocation = gl.getUniformLocation(
+    asciiShaderProgram,
+    "atlasHeight"
+  );
+  const charSizeLocation = gl.getUniformLocation(
+    asciiShaderProgram,
+    "charSize"
+  );
+  const resolutionLocation = gl.getUniformLocation(
+    asciiShaderProgram,
+    "resolution"
+  );
+
+  gl.uniform1i(asciiImageUniform, 0);
 
   gl.activeTexture(gl.TEXTURE1);
-  const atlasTexture = loadTexture(gl, characterAtlasImage);
+  const atlasTexture = createTexture(gl, characterAtlasImage);
   gl.bindTexture(gl.TEXTURE_2D, atlasTexture);
   gl.uniform1i(atlasSamplerUniformLocation, 1);
 
@@ -582,26 +735,21 @@ async function draw() {
   gl.uniform2fv(charSizeLocation, [charWidth, charHeight]);
   gl.uniform2fv(resolutionLocation, [widthInChars, heightInChars]);
 
-  gl.uniform2fv(curveLocation, brightnessCurve.getPoints().flat());
-
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-  const pixelData = new Uint8Array(widthInChars * heightInChars * 4); // 4 bytes per pixel
-
-  // Read pixels from the WebGL canvas (bottom-left to top-right)
-  gl.readPixels(
-    0, // x coordinate
-    0, // y coordinate (bottom-left corner)
-    widthInChars, // width of the canvas
-    heightInChars, // height of the canvas
-    gl.RGBA, // format to read (RGBA)
-    gl.UNSIGNED_BYTE, // type of data to read
-    pixelData // typed array to store pixel data
-  );
-
-  const svg = getOutputSVG(pixelData, widthInChars, heightInChars, charHeight);
-  svgContainer.innerHTML = "";
-  svgContainer.appendChild(svg);
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
-drawButton.addEventListener("click", draw, false);
+function createFramebuffer(gl, texture) {
+  const framebuffer = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+
+  const attachmentPoint = gl.COLOR_ATTACHMENT0;
+  gl.framebufferTexture2D(
+    gl.FRAMEBUFFER,
+    attachmentPoint,
+    gl.TEXTURE_2D,
+    texture,
+    0
+  );
+
+  return framebuffer;
+}
