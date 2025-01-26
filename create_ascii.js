@@ -10,19 +10,24 @@ import { svgToImage } from "./utils.js";
 const maxCharacterAtlasWidth = 95;
 
 export class TextParameters {
-  constructor() {
-    this.characters =
-      " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
-    this.fontSize = 14;
-    this.additionalStyles = {
-      "white-space": "pre",
-      "font-variant-ligatures": "none",
-    };
-    this.fontFamily = "Fira Code";
-    this.fontWeight = "1000";
-    this.lineHeight = 1;
-    this.backgroundColor = "black";
-    this.foregroundColorList = ["#ffffff"];
+  constructor(
+    characters,
+    fontSize,
+    additionalStyles,
+    fontFamily,
+    fontWeight,
+    lineHeight,
+    backgroundColor,
+    foregroundColorList
+  ) {
+    this.characters = characters;
+    this.fontSize = fontSize;
+    this.additionalStyles = additionalStyles;
+    this.fontFamily = fontFamily;
+    this.fontWeight = fontWeight;
+    this.lineHeight = lineHeight;
+    this.backgroundColor = backgroundColor;
+    this.foregroundColorList = foregroundColorList;
   }
 
   getFontStyle() {
@@ -50,18 +55,17 @@ export class TextParameters {
 }
 
 export class AsciiParameters {
-  constructor() {
-    // this.widthInChars = 100;
-    this.scaleWeights = [6, 3, 2, 1];
+  constructor(scaleWeights) {
+    this.scaleWeights = scaleWeights;
   }
 }
 
 export class PreprocessorParameters {
-  constructor() {
-    this.brightnessCurve = [0, 0, 1, 1];
-    this.brightness = -0.3;
-    this.contrast = 0.6;
-    this.saturation = 0;
+  constructor(brightnessCurve, brightness, contrast, saturation) {
+    this.brightnessCurve = brightnessCurve;
+    this.brightness = brightness;
+    this.contrast = contrast;
+    this.saturation = saturation;
   }
 }
 
@@ -265,7 +269,9 @@ export async function createAscii(
   inputCanvas,
   inputImage,
   characterAtlas,
-  textParameters
+  textParameters,
+  preprocessParameters,
+  asciiParameters
 ) {
   const gl = inputCanvas.canvas.getContext("webgl2");
 
@@ -300,8 +306,6 @@ export async function createAscii(
   const framebuffer = createFramebuffer(gl, intermediateTexture);
   const imageTexture = createTexture(gl, inputImage);
 
-  const preprocessParameters = new PreprocessorParameters();
-
   renderPreprocessShader(
     gl,
     preprocessShaderProgram,
@@ -311,8 +315,6 @@ export async function createAscii(
     vao,
     preprocessParameters
   );
-
-  const asciiParameters = new AsciiParameters();
 
   renderAsciiShader(
     gl,

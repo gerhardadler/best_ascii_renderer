@@ -3,31 +3,24 @@ import {
   createCharacterAtlas,
   InputCanvas,
   createAscii,
+  PreprocessorParameters,
+  AsciiParameters,
 } from "./create_ascii.js";
 import { getOutputSVG } from "./get_output_svg.js";
+import { Curve } from "./src/curves.js";
 
-let charWidth;
-let charHeight;
 let fontSize = 12;
-let atlasWidth;
-let atlasHeight;
 
 let img;
-let gl;
-let asciiShaderProgram;
-let preprocessShaderProgram;
-let characterAtlasImage;
-
-const maxCharacterAtlasWidth = 95;
 const imageField = document.getElementById("image");
 const widthInCharsField = document.getElementById("symbol-width");
 const lineHeightField = document.getElementById("line-height");
 const charsField = document.getElementById("chars");
-// const brightnessCurveSvg = document.getElementById("brightness-curve");
-// const brightnessCurve = new Curve(brightnessCurveSvg, [
-//   [0, 0],
-//   [1, 0.3],
-// ]);
+const brightnessCurveSvg = document.getElementById("brightness-curve");
+const brightnessCurve = new Curve(brightnessCurveSvg, [
+  [0, 0],
+  [1, 0.3],
+]);
 const brightness = document.getElementById("brightness");
 const contrast = document.getElementById("contrast");
 const saturation = document.getElementById("saturation");
@@ -185,21 +178,33 @@ imageField.addEventListener("change", function (event) {
   }
 });
 
-function getCharacterColorList() {
-  const characterColorList = [];
-  foregroundColorList.forEach((foregroundColor) => {
-    charsField.value.split("").forEach((character) => {
-      characterColorList.push({
-        foregroundColor,
-        character,
-      });
-    });
-  });
-  return characterColorList;
-}
-
 async function draw() {
-  const textParameters = new TextParameters();
+  const textParameters = new TextParameters(
+    charsField.value,
+    fontSize,
+    {
+      "white-space": "pre",
+      "font-variant-ligatures": "none",
+    },
+    fontNameField.value,
+    fontWeightField.value,
+    lineHeightField.value,
+    backgroundColorField.value,
+    foregroundColorList
+  );
+  const preprocessParameters = new PreprocessorParameters(
+    brightnessCurve.getPoints().flat(),
+    parseFloat(brightness.value),
+    parseFloat(contrast.value),
+    parseFloat(saturation.value)
+  );
+  const asciiParameters = new AsciiParameters([
+    parseFloat(scaleWeight1.value),
+    parseFloat(scaleWeight2.value),
+    parseFloat(scaleWeight4.value),
+    parseFloat(scaleWeight8.value),
+  ]);
+
   const characterAtlas = await createCharacterAtlas(textParameters);
 
   const widthInChars = parseInt(widthInCharsField.value);
@@ -216,7 +221,9 @@ async function draw() {
     inputCanvas,
     img,
     characterAtlas,
-    textParameters
+    textParameters,
+    preprocessParameters,
+    asciiParameters
   );
 
   const svg = getOutputSVG(
