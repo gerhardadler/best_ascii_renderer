@@ -9,8 +9,6 @@ import {
 import { getOutputSVG } from "./get_output_svg.js";
 import { Curve } from "./src/curves.js";
 
-let fontSize = 12;
-
 let img;
 const imageField = document.getElementById("image");
 const widthInCharsField = document.getElementById("symbol-width");
@@ -19,7 +17,7 @@ const charsField = document.getElementById("chars");
 const brightnessCurveSvg = document.getElementById("brightness-curve");
 const brightnessCurve = new Curve(brightnessCurveSvg, [
   [0, 0],
-  [1, 0.3],
+  [1, 1],
 ]);
 const brightness = document.getElementById("brightness");
 const contrast = document.getElementById("contrast");
@@ -181,7 +179,6 @@ imageField.addEventListener("change", function (event) {
 async function draw() {
   const textParameters = new TextParameters(
     charsField.value,
-    fontSize,
     {
       "white-space": "pre",
       "font-variant-ligatures": "none",
@@ -231,7 +228,8 @@ async function draw() {
     textParameters,
     widthInChars,
     heightInChars,
-    characterAtlas.characterHeight
+    characterAtlas.characterHeight,
+    characterAtlas.calculatedFontSize
   );
 
   svgContainer.innerHTML = "";

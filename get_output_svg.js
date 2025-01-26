@@ -3,7 +3,8 @@ export function getOutputSVG(
   textParameters,
   widthInChars,
   heightInChars,
-  charHeight
+  charHeight,
+  calculatedFontSize
 ) {
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
@@ -15,7 +16,7 @@ export function getOutputSVG(
   svgText.setAttribute("x", 0);
   svgText.setAttribute("y", 0);
   svgText.setAttribute("style", textParameters.getFontStyle());
-  svgText.setAttribute("font-size", textParameters.fontSize);
+  svgText.setAttribute("font-size", calculatedFontSize);
   svgText.setAttribute("xml:space", "preserve");
 
   for (let y = 0; y < heightInChars; y++) {

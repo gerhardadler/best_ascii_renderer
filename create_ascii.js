@@ -8,11 +8,11 @@ import {
 import { svgToImage } from "./utils.js";
 
 const maxCharacterAtlasWidth = 95;
+const baseFontSize = 16;
 
 export class TextParameters {
   constructor(
     characters,
-    fontSize,
     additionalStyles,
     fontFamily,
     fontWeight,
@@ -21,7 +21,6 @@ export class TextParameters {
     foregroundColorList
   ) {
     this.characters = characters;
-    this.fontSize = fontSize;
     this.additionalStyles = additionalStyles;
     this.fontFamily = fontFamily;
     this.fontWeight = fontWeight;
@@ -75,13 +74,15 @@ export class CharacterAtlas {
     widthInChars,
     heightInChars,
     characterWidth,
-    characterHeight
+    characterHeight,
+    calculatedFontSize
   ) {
     this.image = image;
     this.widthInChars = widthInChars;
     this.heightInChars = heightInChars;
     this.characterWidth = characterWidth;
     this.characterHeight = characterHeight;
+    this.calculatedFontSize = calculatedFontSize;
   }
 }
 
@@ -98,7 +99,7 @@ function measureCharacterWidth(char, textParameters) {
   let tempSvg = document.createElementNS(svgNS, "svg");
   tempSvg.setAttribute("style", textParameters.getFontStyle());
   let tempText = document.createElementNS(svgNS, "text");
-  tempText.setAttribute("font-size", textParameters.fontSize);
+  tempText.setAttribute("font-size", baseFontSize);
   tempText.textContent = char;
   tempSvg.appendChild(tempText);
   document.body.appendChild(tempSvg);
@@ -125,7 +126,7 @@ export async function createCharacterAtlas(textParameters) {
   let charWidthScale = fontWidth / initialCharWidth;
   let adjustedCharHeight = initialCharHeight * charWidthScale;
 
-  let calculatedFontSize = textParameters.fontSize * charWidthScale;
+  let calculatedFontSize = baseFontSize * charWidthScale;
   let calculatedLineHeight = Math.round(
     adjustedCharHeight * textParameters.lineHeight
   );
@@ -171,7 +172,8 @@ export async function createCharacterAtlas(textParameters) {
     atlasWidth,
     atlasHeight,
     charWidth,
-    charHeight
+    charHeight,
+    calculatedFontSize
   );
 }
 
