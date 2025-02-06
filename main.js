@@ -8,6 +8,7 @@ import {
 } from "./create_ascii.js";
 import { getOutputSVG } from "./get_output_svg.js";
 import { Curve } from "./src/curves.js";
+import { svgToImage } from "./utils.js";
 
 let img;
 const imageField = document.getElementById("image");
@@ -79,7 +80,7 @@ downloadPngButton.addEventListener("click", async function () {
   // create a blob from the canvas
   canvas.toBlob((blob) => {
     // create an anchor element
-    url = URL.createObjectURL(blob);
+    let url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
     a.href = url;
