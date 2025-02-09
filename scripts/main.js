@@ -7,7 +7,7 @@ import {
   AsciiParameters,
 } from "./create_ascii.js";
 import { getOutputSVG } from "./get_output_svg.js";
-import { Curve } from "./src/curves.js";
+import { Curve } from "./curves.js";
 import { svgToImage } from "./utils.js";
 
 let img;
