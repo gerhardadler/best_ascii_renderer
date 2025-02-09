@@ -1,10 +1,51 @@
-#draw-area {
-    max-width: 100%;
-    overflow: scroll;
-    height: 80vh;
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Roboto", sans-serif;
 }
 
-#svg-container {
-    transform: scale(1);
-    transform-origin: top left;
+.program {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: row;
+}
+
+.document-view {
+  height: 100%;
+  width: 100%;
+  flex: 1;
+  background-color: #111111;
+  overflow: scroll;
+  position: relative;
+}
+
+.zoom {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 0.6rem;
+  display: flex;
+  gap: 0.3rem;
+}
+
+#document-width {
+  margin: 0;
+  padding: 0.2rem;
+  background: #f1f1f1;
+}
+
+#document {
+  width: 1000px;
+}
+
+#document svg img {
+  width: 100%;
+}
+
+.sidebar {
+  width: 400px;
+  height: 100%;
+  background-color: #f1f1f1;
+  overflow: scroll;
 }

@@ -29,7 +29,7 @@ const scaleWeight2 = document.getElementById("scale-weight-2");
 const scaleWeight4 = document.getElementById("scale-weight-4");
 const scaleWeight8 = document.getElementById("scale-weight-8");
 const drawButton = document.getElementById("draw-button");
-const svgContainer = document.getElementById("svg-container");
+const doc = document.getElementById("document");
 const fontNameField = document.getElementById("font-name");
 const fontWeightField = document.getElementById("font-weight");
 
@@ -39,9 +39,7 @@ const addCustomColorButton = document.getElementById("add-custom-color-button");
 const colorInput = document.getElementById("custom-color");
 const colorListElement = document.getElementById("color-list");
 
-// const canvas = document.createElement("canvas");
-const canvas = document.getElementById("canvas");
-
+const documentWidthView = document.getElementById("document-width");
 const zoomInButton = document.getElementById("zoom-in");
 const zoomOutButton = document.getElementById("zoom-out");
 
@@ -49,20 +47,24 @@ const pngWidthField = document.getElementById("png-width");
 const downloadPngButton = document.getElementById("download-png-button");
 const downloadSvgButton = document.getElementById("download-svg-button");
 
-let zoom = 1;
+let documentWidth = 1000;
+documentWidthView.textContent = documentWidth;
+doc.style.width = `${documentWidth}px`;
 
 zoomInButton.addEventListener("click", function () {
-  zoom += 0.1;
-  svgContainer.style.transform = `scale(${zoom})`;
+  documentWidth += 20;
+  documentWidthView.textContent = documentWidth;
+  doc.style.width = `${documentWidth}px`;
 });
 
 zoomOutButton.addEventListener("click", function () {
-  zoom -= 0.1;
-  svgContainer.style.transform = `scale(${zoom})`;
+  documentWidth -= 20;
+  documentWidthView.textContent = documentWidth;
+  doc.style.width = `${documentWidth}px`;
 });
 
 downloadPngButton.addEventListener("click", async function () {
-  const svg = svgContainer.querySelector("svg");
+  const svg = document.querySelector("svg");
   const svgImage = await svgToImage(new XMLSerializer().serializeToString(svg));
 
   // create a canvas element to render the SVG to. remember to set the dimensions.
@@ -92,7 +94,7 @@ downloadPngButton.addEventListener("click", async function () {
 });
 
 downloadSvgButton.addEventListener("click", function () {
-  const svg = svgContainer.querySelector("svg");
+  const svg = document.querySelector("svg");
   const svgString = new XMLSerializer().serializeToString(svg);
   const blob = new Blob([svgString], { type: "image/svg+xml" });
   const url = URL.createObjectURL(blob);
@@ -211,6 +213,8 @@ async function draw() {
       widthInChars *
       (characterAtlas.characterWidth / characterAtlas.characterHeight)
   );
+
+  const canvas = document.createElement("canvas");
   canvas.width = widthInChars;
   canvas.height = heightInChars;
 
@@ -233,8 +237,8 @@ async function draw() {
     characterAtlas.calculatedFontSize
   );
 
-  svgContainer.innerHTML = "";
-  svgContainer.appendChild(svg);
+  doc.innerHTML = "";
+  doc.appendChild(svg);
 }
 
 drawButton.addEventListener("click", draw);

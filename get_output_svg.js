@@ -75,8 +75,9 @@ export function getOutputSVG(
   backgroundRect.setAttribute("fill", textParameters.backgroundColor);
   svg.insertBefore(backgroundRect, svg.firstChild);
 
-  svg.setAttribute("width", textBBox.width);
-  svg.setAttribute("height", textBBox.height);
+  // svg.setAttribute("width", textBBox.width);
+  // svg.setAttribute("height", textBBox.height);
+  svg.setAttribute("viewBox", `0 0 ${textBBox.width} ${textBBox.height}`);
 
   return svg;
 }
