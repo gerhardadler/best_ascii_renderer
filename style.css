@@ -45,8 +45,18 @@ body {
   width: 1000px;
 }
 
-#document svg img {
+#document svg,
+#input-image,
+#preprocess-canvas {
   width: 100%;
+}
+
+#document #input-image {
+  display: none;
+}
+
+#document #preprocess-canvas {
+  display: none;
 }
 
 .sidebar {

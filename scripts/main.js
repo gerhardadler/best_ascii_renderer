@@ -10,8 +10,8 @@ import { getOutputSVG } from "./get_output_svg.js";
 import { Curve } from "./curves.js";
 import { svgToImage } from "./utils.js";
 
-let img;
 const imageField = document.getElementById("image");
+const inputImage = document.getElementById("input-image");
 const widthInCharsField = document.getElementById("symbol-width");
 const lineHeightField = document.getElementById("line-height");
 const charsField = document.getElementById("chars");
@@ -170,7 +170,7 @@ imageField.addEventListener("change", function (event) {
 
       // Once the image is loaded, display it in the img tag
       loadingImage.onload = function () {
-        img = loadingImage;
+        inputImage.src = loadingImage.src;
       };
     };
 
@@ -209,7 +209,7 @@ async function draw() {
 
   const widthInChars = parseInt(widthInCharsField.value);
   const heightInChars = Math.round(
-    (img.height / img.width) *
+    (inputImage.height / inputImage.width) *
       widthInChars *
       (characterAtlas.characterWidth / characterAtlas.characterHeight)
   );
@@ -219,14 +219,25 @@ async function draw() {
   canvas.height = heightInChars;
 
   const inputCanvas = new InputCanvas(canvas, widthInChars, heightInChars);
+
+  const preprocessCanvas = document.getElementById("preprocess-canvas");
+  preprocessCanvas.width = inputImage.width;
+  preprocessCanvas.height = inputImage.height;
+
+  // start timer for function
+  console.time("draw");
   const pixelData = await createAscii(
     inputCanvas,
-    img,
+    preprocessCanvas,
+    inputImage,
     characterAtlas,
     textParameters,
     preprocessParameters,
     asciiParameters
   );
+
+  // end timer for function
+  console.timeEnd("draw");
 
   const svg = getOutputSVG(
     pixelData,
@@ -236,8 +247,7 @@ async function draw() {
     characterAtlas.characterHeight,
     characterAtlas.calculatedFontSize
   );
-
-  doc.innerHTML = "";
+  doc.querySelector("svg").remove();
   doc.appendChild(svg);
 }
 

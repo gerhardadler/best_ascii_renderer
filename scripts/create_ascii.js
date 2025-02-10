@@ -182,8 +182,6 @@ function renderPreprocessShader(
   program,
   texture,
   inputImage,
-  framebuffer,
-  vao,
   preprocessParameters
 ) {
   gl.useProgram(program);
@@ -197,8 +195,9 @@ function renderPreprocessShader(
   const contrastLocation = gl.getUniformLocation(program, "contrast");
   const saturationLocation = gl.getUniformLocation(program, "saturation");
 
-  gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+  const vao = createBuffers(gl);
   gl.bindVertexArray(vao);
+
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.uniform1i(preprocessImageUniform, 0);
@@ -234,7 +233,9 @@ function renderAsciiShader(
   const charSizeLocation = gl.getUniformLocation(program, "charSize");
   const resolutionLocation = gl.getUniformLocation(program, "resolution");
 
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null); // Render to the canvas
+  const vao = createBuffers(gl);
+  gl.bindVertexArray(vao);
+
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.uniform1i(asciiImageUniform, 0);
@@ -269,13 +270,15 @@ function renderAsciiShader(
 
 export async function createAscii(
   inputCanvas,
+  preprocessCanvas,
   inputImage,
   characterAtlas,
   textParameters,
   preprocessParameters,
   asciiParameters
 ) {
-  const gl = inputCanvas.canvas.getContext("webgl2");
+  const asciiGl = inputCanvas.canvas.getContext("webgl2");
+  const preprocessGl = preprocessCanvas.getContext("webgl2");
 
   const vertexShaderSource = await loadShaderFile("shaders/vertex.vert");
   const asciiShaderSource = await loadShaderFile("shaders/ascii.frag");
@@ -284,42 +287,31 @@ export async function createAscii(
   );
 
   const asciiShaderProgram = await initShaders(
-    gl,
+    asciiGl,
     vertexShaderSource,
     asciiShaderSource
   );
 
   const preprocessShaderProgram = await initShaders(
-    gl,
+    preprocessGl,
     vertexShaderSource,
     preprocessShaderSource
   );
 
-  // reuse for performance
-  const vao = createBuffers(gl);
-
-  const intermediateTexture = createTexture(
-    gl,
-    null,
-    inputImage.width,
-    inputImage.height
-  );
-
-  const framebuffer = createFramebuffer(gl, intermediateTexture);
-  const imageTexture = createTexture(gl, inputImage);
+  const imageTexture = createTexture(preprocessGl, inputImage);
 
   renderPreprocessShader(
-    gl,
+    preprocessGl,
     preprocessShaderProgram,
     imageTexture,
     inputImage,
-    framebuffer,
-    vao,
     preprocessParameters
   );
 
+  const intermediateTexture = createTexture(asciiGl, preprocessCanvas);
+
   renderAsciiShader(
-    gl,
+    asciiGl,
     asciiShaderProgram,
     intermediateTexture,
     inputCanvas,
@@ -333,13 +325,13 @@ export async function createAscii(
   ); // 4 bytes per pixel
 
   // Read pixels from the WebGL canvas (bottom-left to top-right)
-  gl.readPixels(
+  asciiGl.readPixels(
     0, // x coordinate
     0, // y coordinate (bottom-left corner)
     inputCanvas.widthInChars, // width of the canvas
     inputCanvas.heightInChars, // height of the canvas
-    gl.RGBA, // format to read (RGBA)
-    gl.UNSIGNED_BYTE, // type of data to read
+    asciiGl.RGBA, // format to read (RGBA)
+    asciiGl.UNSIGNED_BYTE, // type of data to read
     pixelData // typed array to store pixel data
   );
 

@@ -24,7 +24,8 @@ float interpolate(vec2[15] curve, float x) {
 }
 
 void main() {
-  vec4 imgColor = texture(img, vTexCoord);
+  vec2 coord = vec2(vTexCoord.x, 1.0 - vTexCoord.y);
+  vec4 imgColor = texture(img, coord);
 
   imgColor.rgb = vec3(interpolate(brightnessCurve, imgColor.r), interpolate(brightnessCurve, imgColor.g), interpolate(brightnessCurve, imgColor.b));
 
