@@ -1,0 +1,67 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Roboto", sans-serif;
+}
+
+.program {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: row;
+}
+
+.document-view {
+  height: 100%;
+  width: 100%;
+  flex: 1;
+  background-color: #111111;
+  position: relative;
+  overflow: scroll;
+}
+
+.document-container {
+  height: 100%;
+  width: 100%;
+  overflow: scroll;
+}
+
+.zoom {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 0.6rem;
+  display: flex;
+  gap: 0.3rem;
+}
+
+#document-width {
+  margin: 0;
+  padding: 0.2rem;
+  background: #f1f1f1;
+}
+
+#document {
+  width: 1000px;
+}
+
+#document svg,
+#input-image,
+#preprocess-canvas {
+  width: 100%;
+}
+
+#document #input-image {
+  display: none;
+}
+
+#document #preprocess-canvas {
+  display: none;
+}
+
+.sidebar {
+  width: 400px;
+  height: 100%;
+  background-color: #f1f1f1;
+  overflow: scroll;
+}

@@ -1,4 +1,4 @@
-class Point {
+export class Point {
   constructor(x, y, getSvgRect) {
     this.x = x;
     this.y = y;
@@ -21,7 +21,7 @@ class Point {
   }
 }
 
-class Curve {
+export class Curve {
   constructor(
     svg,
     initialPoints,
