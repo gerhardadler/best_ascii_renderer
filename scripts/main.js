@@ -12,6 +12,8 @@ import { svgToImage } from "./utils.js";
 
 const imageField = document.getElementById("image");
 const inputImage = document.getElementById("input-image");
+const preprocessCanvas = document.getElementById("preprocess-canvas");
+const asciiOutput = document.getElementById("ascii-output");
 const widthInCharsField = document.getElementById("symbol-width");
 const lineHeightField = document.getElementById("line-height");
 const charsField = document.getElementById("chars");
@@ -46,6 +48,19 @@ const zoomOutButton = document.getElementById("zoom-out");
 const pngWidthField = document.getElementById("png-width");
 const downloadPngButton = document.getElementById("download-png-button");
 const downloadSvgButton = document.getElementById("download-svg-button");
+
+const outputRadios = document.getElementById("output-radios");
+
+let selectedOutput = outputRadios.querySelector("input:checked").value;
+outputRadios.addEventListener("change", function (event) {
+  if (event.target.type === "radio") {
+    selectedOutput = event.target.value;
+    asciiOutput.style.display = selectedOutput === "ascii" ? "block" : "none";
+    inputImage.style.display = selectedOutput === "image" ? "block" : "none";
+    preprocessCanvas.style.display =
+      selectedOutput === "preprocessed" ? "block" : "none";
+  }
+});
 
 let documentWidth = 1000;
 documentWidthView.textContent = documentWidth;
@@ -220,7 +235,6 @@ async function draw() {
 
   const inputCanvas = new InputCanvas(canvas, widthInChars, heightInChars);
 
-  const preprocessCanvas = document.getElementById("preprocess-canvas");
   preprocessCanvas.width = inputImage.width;
   preprocessCanvas.height = inputImage.height;
 
@@ -247,8 +261,8 @@ async function draw() {
     characterAtlas.characterHeight,
     characterAtlas.calculatedFontSize
   );
-  doc.querySelector("svg").remove();
-  doc.appendChild(svg);
+  asciiOutput.querySelector("svg")?.remove();
+  asciiOutput.appendChild(svg);
 }
 
 drawButton.addEventListener("click", draw);

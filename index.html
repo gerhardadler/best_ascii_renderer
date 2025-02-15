@@ -11,14 +11,35 @@
   <body>
     <section class="program">
       <section class="document-view">
-        <div class="zoom">
-          <p id="document-width"></p>
-          <button id="zoom-in">+</button>
-          <button id="zoom-out">-</button>
-        </div>
+        <section class="toolbar">
+          <div id="output-radios">
+            <input
+              type="radio"
+              id="output-ascii"
+              name="output"
+              value="ascii"
+              checked
+            />
+            <label for="output-ascii">ASCII</label>
+            <input type="radio" id="output-image" name="output" value="image" />
+            <label for="output-image">IMAGE</label>
+            <input
+              type="radio"
+              id="output-preprocessed"
+              name="output"
+              value="preprocessed"
+            />
+            <label for="output-preprocessed">PREPROCESSED</label>
+          </div>
+          <div class="zoom">
+            <p id="document-width"></p>
+            <button id="zoom-in">+</button>
+            <button id="zoom-out">-</button>
+          </div>
+        </section>
         <div class="document-container">
           <div id="document">
-            <svg></svg>
+            <div id="ascii-output"><svg></svg></div>
             <img id="input-image" />
             <canvas id="preprocess-canvas"></canvas>
           </div>

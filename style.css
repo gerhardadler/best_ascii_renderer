@@ -26,26 +26,36 @@ body {
   overflow: scroll;
 }
 
-.zoom {
+.toolbar {
   position: absolute;
   right: 0;
   bottom: 0;
   padding: 0.6rem;
   display: flex;
+  gap: 1rem;
+}
+
+#output-radios {
+  padding: 0.3rem;
+  background: #f1f1f1;
+}
+
+.zoom {
+  display: flex;
   gap: 0.3rem;
+  background: #f1f1f1;
+  padding: 0.2rem;
 }
 
 #document-width {
   margin: 0;
-  padding: 0.2rem;
-  background: #f1f1f1;
 }
 
 #document {
   width: 1000px;
 }
 
-#document svg,
+#document #ascii-output,
 #input-image,
 #preprocess-canvas {
   width: 100%;
