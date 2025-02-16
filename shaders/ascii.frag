@@ -1,9 +1,10 @@
 #version 300 es
 
 precision highp float;
+precision highp sampler2DArray;
 
-uniform sampler2D img;
-uniform sampler2D atlas;
+uniform sampler2DArray img;
+uniform sampler2DArray atlas;
 uniform float[4] scales;
 uniform float[4] scaleWeights;
 uniform int numSymbols;
@@ -80,8 +81,8 @@ void main() {
       vec2 atlasOffset = vec2(mod(i, float(atlasWidth)) / float(atlasWidth), floor(i / float(atlasWidth)) / float(atlasHeight));
       for (float x = xStep/2.0; x < 1.0; x += xStep) {
         for (float y = yStep/2.0; y < 1.0; y += yStep) {
-          vec4 imgColor = textureLod(img, coords + vec2(x, y) / resolution, scale);
-          vec4 symbolColor = textureLod(atlas, atlasOffset + vec2(x, y) / vec2(atlasWidth * 3, atlasHeight * 3), scale);
+          vec4 imgColor = texture(img,  vec3(coords +vec2(x, y) / resolution,scale));
+          vec4 symbolColor = texture(atlas,  vec3(atlasOffset +vec2(x, y) / vec2(atlasWidth * 3, atlasHeight * 3), scale));
           cost += colorDistance(imgColor.rgb, symbolColor.rgb) * (xStep * yStep) * scaleWeight;
         }
       }

@@ -77,6 +77,57 @@ function manuallyGenerateMipmaps(gl, image) {
   }
 }
 
+export const createBlurredTextureArray = (gl, image, blurLevels) => {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = image.width;
+  canvas.height = image.height;
+
+  // Create the 3D texture (TEXTURE_2D_ARRAY)
+  const texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture);
+
+  // Allocate storage for the 3D texture (4 layers, RGBA format)
+  gl.texStorage3D(
+    gl.TEXTURE_2D_ARRAY,
+    1,
+    gl.RGBA8,
+    image.width,
+    image.height,
+    blurLevels.length
+  );
+
+  // Upload each blurred version as a different layer (z-index)
+  blurLevels.forEach((blurAmount, layer) => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.filter = `blur(${blurAmount}px)`;
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    // Upload to WebGL
+    gl.texSubImage3D(
+      gl.TEXTURE_2D_ARRAY,
+      0,
+      0,
+      0,
+      layer,
+      canvas.width,
+      canvas.height,
+      1,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      ctx.getImageData(0, 0, canvas.width, canvas.height).data
+    );
+  });
+
+  // Set texture parameters
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  return texture;
+};
+
 export function createTexture(
   gl,
   image = null,

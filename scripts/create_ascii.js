@@ -1,9 +1,10 @@
 import {
-  createTexture,
+  createBlurredTextureArray,
   createFramebuffer,
   createBuffers,
   loadShaderFile,
   initShaders,
+  createTexture,
 } from "./gl_utils.js";
 import { svgToImage } from "./utils.js";
 
@@ -241,7 +242,7 @@ function renderAsciiShader(
   gl.uniform1i(asciiImageUniform, 0);
 
   gl.activeTexture(gl.TEXTURE1);
-  const atlasTexture = createTexture(gl, atlas.image);
+  const atlasTexture = createBlurredTextureArray(gl, atlas.image, [0, 1, 2, 4]);
   gl.bindTexture(gl.TEXTURE_2D, atlasTexture);
   gl.uniform1i(atlasSamplerUniformLocation, 1);
 
@@ -308,7 +309,11 @@ export async function createAscii(
     preprocessParameters
   );
 
-  const intermediateTexture = createTexture(asciiGl, preprocessCanvas);
+  const intermediateTexture = createBlurredTextureArray(
+    asciiGl,
+    preprocessCanvas,
+    [0, 0, 0, 0]
+  );
 
   renderAsciiShader(
     asciiGl,
