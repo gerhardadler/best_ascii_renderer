@@ -31,6 +31,9 @@ const scaleWeight2 = document.getElementById("scale-weight-2");
 const scaleWeight4 = document.getElementById("scale-weight-4");
 const scaleWeight8 = document.getElementById("scale-weight-8");
 const drawButton = document.getElementById("draw-button");
+const preset1Button = document.getElementById("preset1-button");
+const preset2Button = document.getElementById("preset2-button");
+const preset3Button = document.getElementById("preset3-button");
 const doc = document.getElementById("document");
 const fontNameField = document.getElementById("font-name");
 const fontWeightField = document.getElementById("font-weight");
@@ -120,7 +123,7 @@ downloadSvgButton.addEventListener("click", function () {
   URL.revokeObjectURL(url);
 });
 
-const foregroundColorList = ["#FFFFFF"];
+const foregroundColorList = ["#ffffff"];
 
 function renderColorList() {
   colorListElement.innerHTML = "";
@@ -266,3 +269,143 @@ async function draw() {
 }
 
 drawButton.addEventListener("click", draw);
+
+async function draw_preset_1() {
+  const textParameters = new TextParameters(
+    " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
+    {
+      "white-space": "pre",
+      "font-variant-ligatures": "none",
+    },
+    "Fira Code",
+    "1000",
+    "1",
+    "#000000",
+    ["#ffffff"]
+  );
+  const preprocessParameters = new PreprocessorParameters(
+    [0, 0, 1, 0.4],
+    0,
+    1,
+    1
+  );
+  const asciiParameters = new AsciiParameters([6, 3, 2, 1]);
+
+  const characterAtlas = await createCharacterAtlas(textParameters);
+
+  const widthInChars = 192;
+  const heightInChars = Math.round(
+    (inputImage.height / inputImage.width) *
+      widthInChars *
+      (characterAtlas.characterWidth / characterAtlas.characterHeight)
+  );
+
+  const canvas = document.createElement("canvas");
+  canvas.width = widthInChars;
+  canvas.height = heightInChars;
+
+  const inputCanvas = new InputCanvas(canvas, widthInChars, heightInChars);
+
+  preprocessCanvas.width = inputImage.width;
+  preprocessCanvas.height = inputImage.height;
+
+  // start timer for function
+  console.time("draw");
+  const pixelData = await createAscii(
+    inputCanvas,
+    preprocessCanvas,
+    inputImage,
+    characterAtlas,
+    textParameters,
+    preprocessParameters,
+    asciiParameters
+  );
+
+  // end timer for function
+  console.timeEnd("draw");
+
+  const svg = getOutputSVG(
+    pixelData,
+    textParameters,
+    widthInChars,
+    heightInChars,
+    characterAtlas.characterHeight,
+    characterAtlas.calculatedFontSize
+  );
+  asciiOutput.querySelector("svg")?.remove();
+  asciiOutput.appendChild(svg);
+}
+
+preset1Button.addEventListener("click", draw_preset_1);
+
+async function draw_preset_2() {
+  const textParameters = new TextParameters(
+    " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
+    {
+      "white-space": "pre",
+      "font-variant-ligatures": "none",
+    },
+    "Fira Code",
+    "1000",
+    "1",
+    "#000000",
+    ["#ff0000", "#00ff00", "#0000ff"]
+  );
+  const preprocessParameters = new PreprocessorParameters(
+    [0, 0, 1, 0.8],
+    0,
+    1,
+    1
+  );
+  const asciiParameters = new AsciiParameters([6, 3, 2, 1]);
+
+  const characterAtlas = await createCharacterAtlas(textParameters);
+
+  const widthInChars = 192;
+  const heightInChars = Math.round(
+    (inputImage.height / inputImage.width) *
+      widthInChars *
+      (characterAtlas.characterWidth / characterAtlas.characterHeight)
+  );
+
+  const canvas = document.createElement("canvas");
+  canvas.width = widthInChars;
+  canvas.height = heightInChars;
+
+  const inputCanvas = new InputCanvas(canvas, widthInChars, heightInChars);
+
+  preprocessCanvas.width = inputImage.width;
+  preprocessCanvas.height = inputImage.height;
+
+  // start timer for function
+  console.time("draw");
+  const pixelData = await createAscii(
+    inputCanvas,
+    preprocessCanvas,
+    inputImage,
+    characterAtlas,
+    textParameters,
+    preprocessParameters,
+    asciiParameters
+  );
+
+  // end timer for function
+  console.timeEnd("draw");
+
+  const svg = getOutputSVG(
+    pixelData,
+    textParameters,
+    widthInChars,
+    heightInChars,
+    characterAtlas.characterHeight,
+    characterAtlas.calculatedFontSize
+  );
+  asciiOutput.querySelector("svg")?.remove();
+  asciiOutput.appendChild(svg);
+}
+
+preset2Button.addEventListener("click", draw_preset_2);
+
+async function draw_preset_3() {}
+
+preset3Button.addEventListener("click", draw_preset_3);
