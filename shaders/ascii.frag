@@ -6,6 +6,9 @@ uniform sampler2D img;
 uniform sampler2D atlas;
 uniform float[4] scales;
 uniform float[4] scaleWeights;
+
+uniform float squaredWeight;
+
 uniform int numSymbols;
 uniform int atlasWidth;
 uniform int atlasHeight;
@@ -45,7 +48,7 @@ vec3 rgbToLab(vec3 color) {
     return vec3(l, a, b);
 }
 
-float colorDistance(vec3 color1, vec3 color2) {
+float getColorDistance(vec3 color1, vec3 color2) {
     vec3 lab1 = rgbToLab(color1);
     vec3 lab2 = rgbToLab(color2);
     
@@ -82,7 +85,11 @@ void main() {
         for (float y = yStep/2.0; y < 1.0; y += yStep) {
           vec4 imgColor = textureLod(img, coords + vec2(x, y) / resolution, scale);
           vec4 symbolColor = textureLod(atlas, atlasOffset + vec2(x, y) / vec2(atlasWidth * 3, atlasHeight * 3), scale);
-          cost += colorDistance(imgColor.rgb, symbolColor.rgb) * (xStep * yStep) * scaleWeight;
+          float colorDistance = getColorDistance(imgColor.rgb, symbolColor.rgb) * (xStep * yStep);
+          float squaredColorDistance = colorDistance * colorDistance;
+          
+          float normalWeight = 1.0 - squaredWeight;
+          cost += (colorDistance * normalWeight + squaredColorDistance * squaredWeight) * scaleWeight;
         }
       }
     }

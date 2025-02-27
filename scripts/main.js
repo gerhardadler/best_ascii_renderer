@@ -30,6 +30,9 @@ const scaleWeight1 = document.getElementById("scale-weight-1");
 const scaleWeight2 = document.getElementById("scale-weight-2");
 const scaleWeight4 = document.getElementById("scale-weight-4");
 const scaleWeight8 = document.getElementById("scale-weight-8");
+
+const squaredWeight = document.getElementById("squared-weight");
+
 const drawButton = document.getElementById("draw-button");
 const preset1Button = document.getElementById("preset1-button");
 const preset2Button = document.getElementById("preset2-button");
@@ -216,12 +219,15 @@ async function draw() {
     parseFloat(contrast.value),
     parseFloat(saturation.value)
   );
-  const asciiParameters = new AsciiParameters([
-    parseFloat(scaleWeight1.value),
-    parseFloat(scaleWeight2.value),
-    parseFloat(scaleWeight4.value),
-    parseFloat(scaleWeight8.value),
-  ]);
+  const asciiParameters = new AsciiParameters(
+    [
+      parseFloat(scaleWeight1.value),
+      parseFloat(scaleWeight2.value),
+      parseFloat(scaleWeight4.value),
+      parseFloat(scaleWeight8.value),
+    ],
+    parseFloat(squaredWeight.value)
+  );
 
   const characterAtlas = await createCharacterAtlas(textParameters);
 
@@ -272,7 +278,7 @@ drawButton.addEventListener("click", draw);
 
 async function draw_preset_1() {
   const textParameters = new TextParameters(
-    " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
+    " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{}~",
     {
       "white-space": "pre",
       "font-variant-ligatures": "none",
@@ -289,7 +295,7 @@ async function draw_preset_1() {
     1,
     1
   );
-  const asciiParameters = new AsciiParameters([6, 3, 2, 1]);
+  const asciiParameters = new AsciiParameters([6, 3, 2, 1], 0.1);
 
   const characterAtlas = await createCharacterAtlas(textParameters);
 
@@ -340,7 +346,7 @@ preset1Button.addEventListener("click", draw_preset_1);
 
 async function draw_preset_2() {
   const textParameters = new TextParameters(
-    " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
+    " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{}~",
     {
       "white-space": "pre",
       "font-variant-ligatures": "none",
@@ -349,15 +355,15 @@ async function draw_preset_2() {
     "1000",
     "1",
     "#000000",
-    ["#ff0000", "#00ff00", "#0000ff"]
+    ["#ff0000", "#0000ff", "#ffff00", "#ffffff"]
   );
   const preprocessParameters = new PreprocessorParameters(
-    [0, 0, 1, 0.8],
+    [0, 0, 1, 0.5],
     0,
     1,
-    1
+    0.9
   );
-  const asciiParameters = new AsciiParameters([6, 3, 2, 1]);
+  const asciiParameters = new AsciiParameters([6, 3, 2, 1], 0.1);
 
   const characterAtlas = await createCharacterAtlas(textParameters);
 
