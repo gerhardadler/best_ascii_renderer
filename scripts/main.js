@@ -31,7 +31,7 @@ const scaleWeight2 = document.getElementById("scale-weight-2");
 const scaleWeight4 = document.getElementById("scale-weight-4");
 const scaleWeight8 = document.getElementById("scale-weight-8");
 
-const squaredWeight = document.getElementById("squared-weight");
+const distanceExponent = document.getElementById("distance-exponent");
 
 const drawButton = document.getElementById("draw-button");
 const preset1Button = document.getElementById("preset1-button");
@@ -226,7 +226,7 @@ async function draw() {
       parseFloat(scaleWeight4.value),
       parseFloat(scaleWeight8.value),
     ],
-    parseFloat(squaredWeight.value)
+    parseFloat(distanceExponent.value)
   );
 
   const characterAtlas = await createCharacterAtlas(textParameters);

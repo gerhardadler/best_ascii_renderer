@@ -7,7 +7,7 @@ uniform sampler2D atlas;
 uniform float[4] scales;
 uniform float[4] scaleWeights;
 
-uniform float squaredWeight;
+uniform float distanceExponent;
 
 uniform int numSymbols;
 uniform int atlasWidth;
@@ -86,10 +86,8 @@ void main() {
           vec4 imgColor = textureLod(img, coords + vec2(x, y) / resolution, scale);
           vec4 symbolColor = textureLod(atlas, atlasOffset + vec2(x, y) / vec2(atlasWidth * 3, atlasHeight * 3), scale);
           float colorDistance = getColorDistance(imgColor.rgb, symbolColor.rgb) * (xStep * yStep);
-          float squaredColorDistance = colorDistance * colorDistance;
-          
-          float normalWeight = 1.0 - squaredWeight;
-          cost += (colorDistance * normalWeight + squaredColorDistance * squaredWeight) * scaleWeight;
+
+          cost += pow(colorDistance, distanceExponent) * scaleWeight;
         }
       }
     }
