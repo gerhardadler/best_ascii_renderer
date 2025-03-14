@@ -16,6 +16,10 @@ uniform int atlasHeight;
 uniform vec2 charSize;
 uniform vec2 resolution;
 
+uniform float hueWeight;
+uniform float chromaWeight; // saturation
+uniform float brightnessWeight;
+
 
 in vec2 vTexCoord;
 
@@ -53,8 +57,14 @@ float getColorDistance(vec3 color1, vec3 color2) {
     vec3 lab1 = rgbToLab(color1);
     vec3 lab2 = rgbToLab(color2);
     
-    // Euclidean distance in Lab space
-    return length(lab1 - lab2);
+    float dL = lab1.x - lab2.x; // Lightness difference
+    float C1 = length(lab1.yz);
+    float C2 = length(lab2.yz);
+    float dC = C1 - C2; // Chroma difference
+    float dH = length(lab1.yz - lab2.yz) - abs(dC); // Hue difference approximation
+
+    return sqrt(brightnessWeight * dL * dL + chromaWeight * dC * dC + hueWeight * dH * dH);
+;
 }
 
 void main() {

@@ -32,6 +32,9 @@ const scaleWeight4 = document.getElementById("scale-weight-4");
 const scaleWeight8 = document.getElementById("scale-weight-8");
 
 const distanceExponent = document.getElementById("distance-exponent");
+const hueWeight = document.getElementById("hue-weight");
+const chromaWeight = document.getElementById("chroma-weight");
+const brightnessWeight = document.getElementById("brightness-weight");
 
 const drawButton = document.getElementById("draw-button");
 const preset1Button = document.getElementById("preset1-button");
@@ -226,7 +229,10 @@ async function draw() {
       parseFloat(scaleWeight4.value),
       parseFloat(scaleWeight8.value),
     ],
-    parseFloat(distanceExponent.value)
+    parseFloat(distanceExponent.value),
+    parseFloat(hueWeight.value),
+    parseFloat(chromaWeight.value),
+    parseFloat(brightnessWeight.value)
   );
 
   const characterAtlas = await createCharacterAtlas(textParameters);
@@ -295,7 +301,7 @@ async function draw_preset_1() {
     1,
     1
   );
-  const asciiParameters = new AsciiParameters([6, 3, 2, 1], 0.1);
+  const asciiParameters = new AsciiParameters([6, 3, 2, 1], 0.1, 1, 1, 1);
 
   const characterAtlas = await createCharacterAtlas(textParameters);
 
@@ -363,7 +369,7 @@ async function draw_preset_2() {
     1,
     0.9
   );
-  const asciiParameters = new AsciiParameters([6, 3, 2, 1], 0.1);
+  const asciiParameters = new AsciiParameters([6, 3, 2, 1], 0.1, 1, 1, 1);
 
   const characterAtlas = await createCharacterAtlas(textParameters);
 

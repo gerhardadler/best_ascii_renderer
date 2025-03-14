@@ -55,9 +55,18 @@ export class TextParameters {
 }
 
 export class AsciiParameters {
-  constructor(scaleWeights, distanceExponent) {
+  constructor(
+    scaleWeights,
+    distanceExponent,
+    hueWeight,
+    chromaWeight,
+    brightnessWeight
+  ) {
     this.scaleWeights = scaleWeights;
     this.distanceExponent = distanceExponent;
+    this.hueWeight = hueWeight;
+    this.chromaWeight = chromaWeight;
+    this.brightnessWeight = brightnessWeight;
   }
 }
 
@@ -233,6 +242,12 @@ function renderAsciiShader(
     program,
     "distanceExponent"
   );
+  const hueWeightLocation = gl.getUniformLocation(program, "hueWeight");
+  const chromaWeightLocation = gl.getUniformLocation(program, "chromaWeight");
+  const brightnessWeightLocation = gl.getUniformLocation(
+    program,
+    "brightnessWeight"
+  );
   const numSymbolsLocation = gl.getUniformLocation(program, "numSymbols");
   const atlasWidthLocation = gl.getUniformLocation(program, "atlasWidth");
   const atlasHeightLocation = gl.getUniformLocation(program, "atlasHeight");
@@ -256,6 +271,9 @@ function renderAsciiShader(
   gl.uniform1fv(scaleWeightsLocation, asciiParameters.scaleWeights);
 
   gl.uniform1f(distanceExponentLocation, asciiParameters.distanceExponent);
+  gl.uniform1f(hueWeightLocation, asciiParameters.hueWeight);
+  gl.uniform1f(chromaWeightLocation, asciiParameters.chromaWeight);
+  gl.uniform1f(brightnessWeightLocation, asciiParameters.brightnessWeight);
 
   gl.uniform1i(
     numSymbolsLocation,
