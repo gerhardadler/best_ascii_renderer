@@ -64,7 +64,6 @@ float getColorDistance(vec3 color1, vec3 color2) {
     float dH = length(lab1.yz - lab2.yz) - abs(dC); // Hue difference approximation
 
     return sqrt(brightnessWeight * dL * dL + chromaWeight * dC * dC + hueWeight * dH * dH);
-;
 }
 
 void main() {
