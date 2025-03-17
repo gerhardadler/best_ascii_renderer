@@ -151,10 +151,10 @@ export async function createCharacterAtlas(textParameters) {
     let x = i % maxCharacterAtlasWidth;
 
     let textElem = document.createElementNS(svgNS, "text");
-    textElem.setAttribute("x", x * 3 * fontWidth);
+    textElem.setAttribute("x", x * 3 * fontWidth + fontWidth);
     textElem.setAttribute(
       "y",
-      calculatedFontSize + y * 3 * calculatedLineHeight
+      calculatedFontSize + y * 2 * calculatedLineHeight + calculatedLineHeight
     );
     textElem.setAttribute("fill", characterColor.foregroundColor);
 
@@ -169,14 +169,20 @@ export async function createCharacterAtlas(textParameters) {
     characterColorList.length / maxCharacterAtlasWidth
   );
 
-  svg.setAttribute("width", fontWidth * atlasWidth * 3);
-  svg.setAttribute("height", calculatedLineHeight * atlasHeight * 3);
+  svg.setAttribute("width", fontWidth * atlasWidth * 3 + fontWidth);
+  svg.setAttribute(
+    "height",
+    calculatedLineHeight * atlasHeight * 2 + calculatedLineHeight
+  );
 
   let serializedSvg = new XMLSerializer().serializeToString(svg);
 
   const characterAtlasImage = await svgToImage(serializedSvg);
-  const charWidth = characterAtlasImage.width / atlasWidth / 3;
-  const charHeight = characterAtlasImage.height / atlasHeight / 3;
+  const charWidth = characterAtlasImage.width / (atlasWidth * 3 + 1);
+  const charHeight = characterAtlasImage.height / (atlasHeight * 2 + 1);
+
+  console.log(atlasHeight, calculatedLineHeight);
+  console.log(charWidth, charHeight);
 
   return new CharacterAtlas(
     characterAtlasImage,

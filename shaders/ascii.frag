@@ -81,6 +81,9 @@ void main() {
   float minCost = 10000.0;
   int chosenSymbolOffset = 0;
 
+  float characterWidthFraction = 1.0 / float(atlasWidth * 3 + 1);
+  float characterHeightFraction = 1.0 / float(atlasHeight * 2 + 1);
+
   for (float i = 0.0; i < float(numSymbols); i++) {
     float cost = 0.0;
     for (int scaleI = 0; scaleI < 4; scaleI++) {
@@ -90,11 +93,17 @@ void main() {
       float xStep = 1.0 / (charSize.x / pow(2.0, scale)) / 2.0;
       float yStep = 1.0 / (charSize.y / pow(2.0, scale)) / 2.0;
 
-      vec2 atlasOffset = vec2(mod(i, float(atlasWidth)) / float(atlasWidth), floor(i / float(atlasWidth)) / float(atlasHeight));
+      vec2 atlasOffset = vec2(0,0);
+      float xOffset = mod(i, float(atlasWidth));
+      atlasOffset.x = ((1. - characterWidthFraction)/float(atlasWidth) * xOffset + characterWidthFraction);
+
+      float yOffset = floor(i / float(atlasWidth));
+      atlasOffset.y = ((1. - characterHeightFraction)/float(atlasHeight) * yOffset + characterHeightFraction);
+
       for (float x = xStep/2.0; x < 1.0; x += xStep) {
         for (float y = yStep/2.0; y < 1.0; y += yStep) {
           vec4 imgColor = texture(img, coords + vec2(x, y) / resolution);
-          vec4 symbolColor = texture(atlas, vec3(atlasOffset + vec2(x, y) / vec2(atlasWidth * 3, atlasHeight * 3), scale));
+          vec4 symbolColor = texture(atlas, vec3(atlasOffset + vec2(x, y) / vec2(atlasWidth * 3 + 1, atlasHeight * 2 + 1), scale));
           float colorDistance = getColorDistance(imgColor.rgb, symbolColor.rgb) * (xStep * yStep);
 
           cost += pow(colorDistance, distanceExponent) * scaleWeight;
