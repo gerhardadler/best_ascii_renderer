@@ -90,8 +90,8 @@ void main() {
       float scale = scales[scaleI];
       float scaleWeight = scaleWeights[scaleI];
 
-      float xStep = 1.0 / (charSize.x / pow(2.0, scale)) / 2.0;
-      float yStep = 1.0 / (charSize.y / pow(2.0, scale)) / 2.0;
+      float xStep = 1.0 / 8.0;
+      float yStep = 1.0 / 16.0;
 
       vec2 atlasOffset = vec2(0,0);
       float xOffset = mod(i, float(atlasWidth));

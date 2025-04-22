@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Best Ascii Renderer</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap"
+      rel="stylesheet"
+    />
     <script src="scripts/main.js" type="module" defer></script>
   </head>
 
@@ -60,18 +66,18 @@
           ></svg
           ><br />
           <label>Contrast</label>
-          <input type="number" id="contrast" value="0.6" /><br />
+          <input type="number" id="contrast" value="0.556" /><br />
           <label>Brightness</label>
-          <input type="number" id="brightness" value="-0.3" /><br />
+          <input type="number" id="brightness" value="-0.222" /><br />
           <label>Saturation</label>
           <input type="number" id="saturation" value="1" /><br />
         </fieldset>
         <fieldset>
           <legend>Text</legend>
           <label>Font name (local)</label>
-          <input type="text" id="font-name" /><br />
+          <input type="text" id="font-name" value="Fira Code" /><br />
           <label>Font weight</label>
-          <input type="text" id="font-weight" /><br />
+          <input type="text" id="font-weight" value="bold" /><br />
           <label>Line height</label>
           <input type="number" id="line-height" value="1" /><br />
           <label>Characters</label>
@@ -88,19 +94,22 @@
         <fieldset>
           <legend>Output</legend>
           <label>Width in symbols</label>
-          <input type="number" id="symbol-width" value="64" /><br />
+          <input type="number" id="symbol-width" value="192" /><br />
 
           <label>Scale Weight 1</label>
-          <input type="number" id="scale-weight-1" value="1.0" /><br />
+          <input type="number" id="scale-weight-1" value="0" /><br />
           <label>Scale Weight 2</label>
-          <input type="number" id="scale-weight-2" value="1.0" /><br />
+          <input type="number" id="scale-weight-2" value="0" /><br />
           <label>Scale Weight 4</label>
           <input type="number" id="scale-weight-4" value="1.0" /><br />
           <label>Scale Weight 8</label>
-          <input type="number" id="scale-weight-8" value="1.0" /><br />
+          <input type="number" id="scale-weight-8" value="0" /><br />
           <br />
-          <label>Distance exponent</label>
-          <input type="number" id="distance-exponent" value="1" /><br />
+          <label>
+            Distance exponent (if using multiple colors, this should be set to
+            2)
+          </label>
+          <input type="number" id="distance-exponent" value="2" /><br />
           <label>Hue weight</label>
           <input type="number" id="hue-weight" value="1" /><br />
           <label>Saturation weight</label>
@@ -118,9 +127,11 @@
         </fieldset>
         <br />
         <button id="draw-button">Draw</button>
+        <!--
         <button id="preset1-button">Preset1</button>
         <button id="preset2-button">Preset2</button>
         <button id="preset3-button">Preset3</button>
+        -->
       </section>
     </section>
   </body>
