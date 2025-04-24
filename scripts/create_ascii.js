@@ -268,7 +268,7 @@ function renderAsciiShader(
   gl.uniform1i(asciiImageUniform, 0);
 
   gl.activeTexture(gl.TEXTURE1);
-  const atlasTexture = createBlurredTextureArray(gl, atlas.image, [0, 1, 2, 3]);
+  const atlasTexture = createBlurredTextureArray(gl, atlas.image, [0, 1, 2, 4]);
   gl.bindTexture(gl.TEXTURE_2D, atlasTexture);
   gl.uniform1i(atlasSamplerUniformLocation, 1);
 
