@@ -238,7 +238,7 @@ async function draw() {
   const characterAtlas = await createCharacterAtlas(textParameters);
 
   const widthInChars = parseInt(widthInCharsField.value);
-  const heightInChars = Math.round(
+  let heightInChars = Math.floor(
     (inputImage.height / inputImage.width) *
       widthInChars *
       (characterAtlas.characterWidth / characterAtlas.characterHeight)

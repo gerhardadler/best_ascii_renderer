@@ -18,11 +18,12 @@ export function getOutputSVG(
   svgText.setAttribute("style", textParameters.getFontStyle());
   svgText.setAttribute("font-size", calculatedFontSize);
   svgText.setAttribute("xml:space", "preserve");
+  svgText.setAttribute("dominant-baseline", "hanging");
 
   for (let y = 0; y < heightInChars; y++) {
     let wrapperTspan = document.createElementNS(svgNS, "tspan");
     wrapperTspan.setAttribute("x", 0);
-    wrapperTspan.setAttribute("y", y * charHeight + charHeight);
+    wrapperTspan.setAttribute("y", y * charHeight);
 
     let currentColor = undefined;
     let sameColoredText = "";

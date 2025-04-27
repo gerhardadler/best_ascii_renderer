@@ -105,18 +105,52 @@ export class InputCanvas {
   }
 }
 
-function measureCharacterWidth(char, textParameters) {
+async function measureTextBoundaries(content, textParameters, fontSize) {
+  await document.fonts.load(
+    `${textParameters.fontWeight} ${fontSize}px ${textParameters.fontFamily}`
+  );
+
   let svgNS = "http://www.w3.org/2000/svg";
   let tempSvg = document.createElementNS(svgNS, "svg");
-  tempSvg.setAttribute("style", textParameters.getFontStyle());
   let tempText = document.createElementNS(svgNS, "text");
-  tempText.setAttribute("font-size", baseFontSize);
-  tempText.textContent = char;
+  tempText.setAttribute("style", textParameters.getFontStyle());
+  tempText.setAttribute("font-size", fontSize);
+  tempText.setAttribute("xml:space", "preserve");
+  tempText.setAttribute("dominant-baseline", "hanging");
+  tempText.setAttribute("fill", "black");
+  tempText.setAttribute("font-family", textParameters.fontFamily);
+  tempText.setAttribute("font-weight", textParameters.fontWeight);
+  tempText.textContent = content;
   tempSvg.appendChild(tempText);
   document.body.appendChild(tempSvg);
   let bbox = tempText.getBBox();
   document.body.removeChild(tempSvg);
   return [bbox.width, bbox.height];
+}
+
+async function tuneFontSize(textParameters, fontSize, targetCharWidth) {
+  // Measure initial text size
+  let [measuredWidth, measuredHeight] = await measureTextBoundaries(
+    "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+    textParameters,
+    fontSize
+  );
+
+  // Adjust width for the number of characters
+  measuredWidth /= 32;
+
+  // Calculate the scaling factor
+  const scale = targetCharWidth / measuredWidth;
+  const adjustedFontSize = fontSize * scale;
+
+  // Measure again with the adjusted font size
+  const [finalWidth, finalHeight] = await measureTextBoundaries(
+    "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+    textParameters,
+    adjustedFontSize
+  );
+
+  return [adjustedFontSize, finalWidth / 32, finalHeight];
 }
 
 export async function createCharacterAtlas(textParameters) {
@@ -129,19 +163,10 @@ export async function createCharacterAtlas(textParameters) {
       `background: ${textParameters.backgroundColor};`
   );
   // Measure character width
-  let [initialCharWidth, initialCharHeight] = measureCharacterWidth(
-    "M",
-    textParameters
-  );
-  let fontWidth = 8;
-  let charWidthScale = fontWidth / initialCharWidth;
-  let adjustedCharHeight = initialCharHeight * charWidthScale;
+  let [calculatedFontSize, adjustedCharWidth, adjustedCharHeight] =
+    await tuneFontSize(textParameters, baseFontSize, 8);
 
-  let calculatedFontSize = baseFontSize * charWidthScale;
-  let calculatedLineHeight = Math.round(
-    adjustedCharHeight * textParameters.lineHeight
-  );
-
+  let calculatedLineHeight = adjustedCharHeight * textParameters.lineHeight;
   const characterColorList = textParameters.getCharacterColorList();
 
   for (let i = 0; i < characterColorList.length; i++) {
@@ -151,7 +176,7 @@ export async function createCharacterAtlas(textParameters) {
     let x = i % maxCharacterAtlasWidth;
 
     let textElem = document.createElementNS(svgNS, "text");
-    textElem.setAttribute("x", x * 3 * fontWidth + fontWidth);
+    textElem.setAttribute("x", x * 3 * adjustedCharWidth + adjustedCharWidth);
     textElem.setAttribute(
       "y",
       calculatedFontSize + y * 2 * calculatedLineHeight + calculatedLineHeight
@@ -169,7 +194,10 @@ export async function createCharacterAtlas(textParameters) {
     characterColorList.length / maxCharacterAtlasWidth
   );
 
-  svg.setAttribute("width", fontWidth * atlasWidth * 3 + fontWidth);
+  svg.setAttribute(
+    "width",
+    adjustedCharWidth * atlasWidth * 3 + adjustedCharWidth
+  );
   svg.setAttribute(
     "height",
     calculatedLineHeight * atlasHeight * 2 + calculatedLineHeight
@@ -178,8 +206,8 @@ export async function createCharacterAtlas(textParameters) {
   let serializedSvg = new XMLSerializer().serializeToString(svg);
 
   const characterAtlasImage = await svgToImage(serializedSvg);
-  const charWidth = characterAtlasImage.width / (atlasWidth * 3 + 1);
-  const charHeight = characterAtlasImage.height / (atlasHeight * 2 + 1);
+  const charWidth = adjustedCharWidth;
+  const charHeight = calculatedLineHeight;
 
   console.log(atlasHeight, calculatedLineHeight);
   console.log(charWidth, charHeight);
